@@ -1,5 +1,6 @@
 # Miscellaneous
-*.env
+**/.env
+.env
 *.class
 *.log
 *.pyc
