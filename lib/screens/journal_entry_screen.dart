@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../utils/colors.dart';
-import 'package:intl/intl.dart';
 import 'package:mrzorro_app/utils/file_utils.dart';
 
 class JournalEntryScreen extends StatefulWidget {

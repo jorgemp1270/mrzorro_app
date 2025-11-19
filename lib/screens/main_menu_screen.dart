@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:mrzorro_app/screens/login_screen.dart';
 import '../utils/colors.dart';
 import '../utils/constants.dart';
 import '../services/api_service.dart';
@@ -380,8 +381,16 @@ class _HomeTabState extends State<HomeTab> {
                       ),
                       const SizedBox(width: 10),
                       IconButton(
-                        icon: Icon(Icons.settings, color: AppColors.lavender),
-                        onPressed: () {},
+                        icon: Icon(Icons.logout, color: AppColors.lavender),
+                        onPressed: () {
+                          AuthService.logout();
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const LoginScreen(),
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),

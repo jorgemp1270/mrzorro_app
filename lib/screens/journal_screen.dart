@@ -2,6 +2,8 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:local_auth/local_auth.dart';
+import 'package:mrzorro_app/screens/login_screen.dart';
+import 'package:mrzorro_app/services/auth_service.dart';
 import '../utils/colors.dart';
 import '../utils/constants.dart';
 
@@ -167,8 +169,14 @@ class _JournalScreenState extends State<JournalScreen> {
             ),
           ),
           IconButton(
-            icon: Icon(Icons.settings, color: AppColors.lavender),
-            onPressed: () {},
+            icon: Icon(Icons.logout, color: AppColors.lavender),
+            onPressed: () {
+              AuthService.logout();
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const LoginScreen()),
+              );
+            },
           ),
         ],
       ),

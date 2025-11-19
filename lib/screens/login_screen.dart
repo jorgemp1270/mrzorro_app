@@ -345,20 +345,24 @@ class _LoginTabState extends State<LoginTab> {
                   // Save credentials option
                   Row(
                     children: [
+                      Expanded(
+                        child: Text(
+                          'Guardar mis datos para iniciar sesión automáticamente',
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 14,
+                          ),
+                          overflow: TextOverflow.visible,
+                          softWrap: true,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
                       Switch(
                         value: _saveCredentials,
                         onChanged: (value) {
                           setState(() => _saveCredentials = value);
                         },
                         activeColor: AppColors.lavender,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Guardar datos',
-                        style: TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 14,
-                        ),
                       ),
                     ],
                   ),
