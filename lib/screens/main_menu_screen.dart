@@ -530,21 +530,30 @@ class _HomeTabState extends State<HomeTab> {
               // Emotion Buttons
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                mainAxisSize: MainAxisSize.max,
                 children: [
-                  _EmotionButton(
-                    emoji: '😰',
-                    label: 'Estoy Ansioso',
-                    onTap: () => _registerEmotion('anxious'),
+                  Expanded(
+                    child: _EmotionButton(
+                      emoji: '😊',
+                      label: 'Estoy Feliz',
+                      onTap: () => _registerEmotion('happy'),
+                    ),
                   ),
-                  _EmotionButton(
-                    emoji: '😊',
-                    label: 'Estoy Feliz',
-                    onTap: () => _registerEmotion('happy'),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _EmotionButton(
+                      emoji: '😢',
+                      label: 'Estoy Triste',
+                      onTap: () => _registerEmotion('sad'),
+                    ),
                   ),
-                  _EmotionButton(
-                    emoji: '🤔',
-                    label: 'Otro',
-                    onTap: _showMoreEmotions,
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _EmotionButton(
+                      emoji: '🤔',
+                      label: 'Otro',
+                      onTap: () => _showMoreEmotions(),
+                    ),
                   ),
                 ],
               ),
@@ -552,7 +561,7 @@ class _HomeTabState extends State<HomeTab> {
               // 🦊 ========================================
               // 🦊 ZORRITO + FOX CARD INTEGRADOS
               // 🦊 ========================================
-              const SizedBox(height: 0),
+              const SizedBox(height: 10),
 
               Column(
                 children: [
@@ -563,7 +572,7 @@ class _HomeTabState extends State<HomeTab> {
                     height: 250, // 🎯 AJUSTA LA ALTURA DEL ZORRITO AQUÍ
                     fit: BoxFit.contain,
                   ),
-
+                  const SizedBox(height: 10),
                   // 🎯 AJUSTA EL ESPACIO ENTRE EL ZORRITO Y LA CARD AQUÍ
                   // Fox Card (abajo)
                   GestureDetector(

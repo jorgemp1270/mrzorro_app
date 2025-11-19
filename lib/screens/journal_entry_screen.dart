@@ -6,10 +6,16 @@ import 'package:intl/intl.dart';
 import 'package:mrzorro_app/utils/file_utils.dart';
 
 class JournalEntryScreen extends StatefulWidget {
+  final String? title;
   final String? initialPrompt;
   final File? initialImage;
 
-  const JournalEntryScreen({super.key, this.initialPrompt, this.initialImage});
+  const JournalEntryScreen({
+    super.key,
+    this.title,
+    this.initialPrompt,
+    this.initialImage,
+  });
 
   @override
   State<JournalEntryScreen> createState() => _JournalEntryScreenState();
@@ -25,6 +31,9 @@ class _JournalEntryScreenState extends State<JournalEntryScreen> {
   @override
   void initState() {
     super.initState();
+    if (widget.title != null) {
+      _titleController.text = widget.title!;
+    }
     if (widget.initialPrompt != null) {
       _contentController.text = '${widget.initialPrompt}\n\n';
     }
@@ -203,7 +212,7 @@ class _JournalEntryScreenState extends State<JournalEntryScreen> {
                 decoration: const InputDecoration(
                   hintText: 'Titulo',
                   border: InputBorder.none,
-                  hintStyle: TextStyle(color: Colors.white70),
+                  hintStyle: TextStyle(color: AppColors.textSecondary),
                 ),
               ),
             ),
@@ -229,7 +238,7 @@ class _JournalEntryScreenState extends State<JournalEntryScreen> {
                 decoration: const InputDecoration(
                   hintText: 'Escribe algo...',
                   border: InputBorder.none,
-                  hintStyle: TextStyle(color: Colors.white70),
+                  hintStyle: TextStyle(color: AppColors.textSecondary),
                 ),
               ),
             ),

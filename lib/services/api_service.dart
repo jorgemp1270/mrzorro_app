@@ -88,25 +88,28 @@ class ApiService {
     }
   }
 
-  /// Predict image label
+  /// Predict image label with AI description
   static Future<Map<String, dynamic>> predictImage({
     required String userId,
-    required String date,
     required String imageBase64,
   }) async {
     try {
       final response = await http.post(
         Uri.parse(ApiConfig.predictImageUrl),
         headers: ApiConfig.headers,
-        body: jsonEncode({'user': userId, 'date': date, 'img': imageBase64}),
+        body: jsonEncode({'user': userId, 'img': imageBase64}),
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         return {
           'success': true,
-          'date': data['date'],
-          'predicted_label': data['predicted_label'],
+          'label': data['img'], // Predicted label from ResNet-50
+          'overview': data['overview'], // AI-generated description from Gemini
+          'description':
+              data['overview']?['message'] ?? 'Imagen analizada correctamente',
+          'recommendation': data['overview']?['recommendation'] ?? '',
+          'interesting_fact': data['overview']?['interesting_fact'] ?? '',
         };
       } else {
         final errorData = jsonDecode(response.body);

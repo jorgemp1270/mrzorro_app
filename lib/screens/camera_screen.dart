@@ -1,10 +1,11 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:intl/intl.dart';
 import '../utils/colors.dart';
+import '../services/api_service.dart';
+import '../services/auth_service.dart';
 import 'journal_entry_screen.dart';
-import 'package:intl/intl.dart';
 import 'package:mrzorro_app/utils/file_utils.dart';
 
 class CameraScreen extends StatefulWidget {
@@ -19,6 +20,21 @@ class _CameraScreenState extends State<CameraScreen> {
   File? _capturedImage;
   bool _isAnalyzing = false;
   String? _analysisResult;
+  String? _currentUserId;
+  Map<String, dynamic>? _aiAnalysis;
+
+  @override
+  void initState() {
+    super.initState();
+    _getCurrentUser();
+  }
+
+  Future<void> _getCurrentUser() async {
+    final userId = await AuthService.getCurrentUserId();
+    setState(() {
+      _currentUserId = userId;
+    });
+  }
 
   Future<void> _takePicture() async {
     try {
@@ -53,16 +69,42 @@ class _CameraScreenState extends State<CameraScreen> {
   }
 
   Future<void> _analyzeImage(File image) async {
-    // Aquí conectarías con tu backend para analizar la imagen
-    // Por ahora simularemos un análisis
-    await Future.delayed(const Duration(seconds: 2));
+    if (_currentUserId == null) {
+      setState(() {
+        _isAnalyzing = false;
+        _analysisResult =
+            'Error: Usuario no identificado. Por favor inicia sesión nuevamente.';
+      });
+      return;
+    }
 
-    setState(() {
-      _isAnalyzing = false;
-      _analysisResult =
-          'Se detectó: Una escena tranquila con naturaleza. '
-          'Esto podría indicar un momento de paz y reflexión.';
-    });
+    try {
+      // Convert image to base64
+      final bytes = await image.readAsBytes();
+      final base64Image = base64Encode(bytes);
+
+      // Call the predict-image API
+      final result = await ApiService.predictImage(
+        userId: _currentUserId!,
+        imageBase64: base64Image,
+      );
+
+      setState(() {
+        _isAnalyzing = false;
+        if (result['success']) {
+          _aiAnalysis = result;
+          _analysisResult =
+              result['description'] ?? 'Imagen analizada correctamente';
+        } else {
+          _analysisResult = 'Error al analizar la imagen: ${result['message']}';
+        }
+      });
+    } catch (e) {
+      setState(() {
+        _isAnalyzing = false;
+        _analysisResult = 'Error de conexión: $e';
+      });
+    }
   }
 
   Future<void> _createJournalEntry() async {
@@ -73,14 +115,20 @@ class _CameraScreenState extends State<CameraScreen> {
       _capturedImage!,
     );
 
-    // Pasar la imagen directamente a JournalEntryScreen
+    // Use the AI-predicted label as the title, or fallback to default
+    String journalTitle = 'Nueva entrada desde cámara';
+    if (_aiAnalysis != null && _aiAnalysis!['label'] != null) {
+      journalTitle = _aiAnalysis!['label'];
+    }
+
+    // Pasar la imagen y análisis AI directamente a JournalEntryScreen
     Navigator.push(
       context,
       MaterialPageRoute(
         builder:
             (_) => JournalEntryScreen(
-              initialPrompt: _analysisResult,
-              initialImage: savedImage, // ← ENVIAR IMAGEN
+              title: journalTitle,
+              initialImage: savedImage,
             ),
       ),
     );
@@ -90,6 +138,7 @@ class _CameraScreenState extends State<CameraScreen> {
     setState(() {
       _capturedImage = null;
       _analysisResult = null;
+      _aiAnalysis = null;
       _isAnalyzing = false;
     });
   }
@@ -250,13 +299,110 @@ class _CameraScreenState extends State<CameraScreen> {
                     ),
                   )
                 else if (_analysisResult != null)
-                  Text(
-                    _analysisResult!,
-                    style: TextStyle(
-                      fontSize: 15,
-                      color: AppColors.textPrimary,
-                      height: 1.5,
-                    ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Main description
+                      Text(
+                        _analysisResult!,
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: AppColors.textPrimary,
+                          height: 1.5,
+                        ),
+                      ),
+
+                      // Show additional AI insights if available
+                      if (_aiAnalysis != null) ...[
+                        if (_aiAnalysis!['recommendation']?.isNotEmpty ==
+                            true) ...[
+                          const SizedBox(height: 15),
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: AppColors.lavenderLight,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.lightbulb,
+                                      color: AppColors.lavender,
+                                      size: 16,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      'Recomendación',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.lavender,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  _aiAnalysis!['recommendation'],
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: AppColors.textPrimary,
+                                    height: 1.4,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+
+                        if (_aiAnalysis!['interesting_fact']?.isNotEmpty ==
+                            true) ...[
+                          const SizedBox(height: 10),
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: AppColors.peach.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.star,
+                                      color: AppColors.peach,
+                                      size: 16,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      'Dato Interesante',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.peach,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  _aiAnalysis!['interesting_fact'],
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: AppColors.textPrimary,
+                                    height: 1.4,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
+                    ],
                   ),
               ],
             ),
