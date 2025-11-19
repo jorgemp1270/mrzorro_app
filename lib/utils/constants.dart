@@ -45,11 +45,16 @@ class AppConstants {
   };
 
   static final Map<String, String> emotionsSpanish = {
-    'anxious': 'Estoy Ansioso',
-    'happy': 'Estoy Feliz',
-    'sad': 'Estoy Triste',
-    'angry': 'Estoy Enojado',
-    'calm': 'Estoy Tranquilo',
-    'excited': 'Estoy Emocionado',
+    'anxious': 'Ansioso',
+    'happy': 'Feliz',
+    'sad': 'Triste',
+    'angry': 'Enojado',
+    'calm': 'Tranquilo',
+    'excited': 'Emocionado',
+    'tired': 'Cansado',
+    'confused': 'Confundido',
+    'grateful': 'Agradecido',
+    'motivated': 'Motivado',
+    'peaceful': 'En paz',
   };
 }

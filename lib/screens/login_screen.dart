@@ -1,8 +1,10 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/colors.dart';
+import '../utils/validation_utils.dart';
+import '../services/auth_service.dart';
 import 'main_menu_screen.dart';
+import 'api_test_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   final int initialTab;
@@ -194,70 +196,205 @@ class LoginTab extends StatefulWidget {
 class _LoginTabState extends State<LoginTab> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+
+  bool _isLoading = false;
+  bool _saveCredentials = false;
+  String? _emailError;
+  String? _passwordError;
+
+  @override
+  void initState() {
+    super.initState();
+    _autoLogin();
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _autoLogin() async {
+    // Try to get saved credentials and auto-login
+    final credentials = await AuthService.getSavedCredentials();
+    if (credentials['email'] != null && credentials['password'] != null) {
+      _emailController.text = credentials['email']!;
+      _passwordController.text = credentials['password']!;
+      _saveCredentials = credentials['shouldSave'] == 'true';
+
+      if (_saveCredentials) {
+        // Attempt auto-login if credentials should be saved
+        setState(() => _isLoading = true);
+        final result = await AuthService.autoLogin();
+        setState(() => _isLoading = false);
+
+        if (result['success'] && mounted) {
+          await _navigateToMainMenu();
+        }
+      }
+    }
+  }
 
   Future<void> _login() async {
+    setState(() {
+      _emailError = ValidationUtils.getEmailError(_emailController.text.trim());
+      _passwordError = ValidationUtils.getPasswordError(
+        _passwordController.text,
+      );
+    });
+
+    if (_emailError != null || _passwordError != null) {
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    final result = await AuthService.login(
+      _emailController.text.trim(),
+      _passwordController.text,
+    );
+
+    setState(() => _isLoading = false);
+
+    if (result['success']) {
+      if (_saveCredentials) {
+        await AuthService.saveCredentials(
+          _emailController.text.trim(),
+          _passwordController.text,
+        );
+      } else {
+        await AuthService.clearCredentials();
+      }
+
+      await _navigateToMainMenu();
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message']),
+            backgroundColor: Colors.red.shade400,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _navigateToMainMenu() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('is_logged_in', true);
-    await prefs.setString('user_email', _emailController.text);
 
-    if (!mounted) return;
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const MainMenuScreen()),
-    );
+    if (mounted) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const MainMenuScreen()),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(10),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(30),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(30),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.lavender.withOpacity(0.15),
-                  blurRadius: 15,
-                  offset: const Offset(0, 5),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                Text(
-                  'Bienvenido a Soulcare',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.lavender,
+      child: Form(
+        key: _formKey,
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(30),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.lavender.withOpacity(0.15),
+                    blurRadius: 15,
+                    offset: const Offset(0, 5),
                   ),
-                ),
-
-                const SizedBox(height: 30),
-
-                _inputField("Email", _emailController),
-                const SizedBox(height: 20),
-
-                _inputField("Password", _passwordController, obscure: true),
-                const SizedBox(height: 40),
-
-                _button("Log In", _login),
-                const SizedBox(height: 20),
-
-                TextButton(
-                  onPressed: () {},
-                  child: Text(
-                    '¿Olvidaste la contraseña?',
-                    style: TextStyle(color: AppColors.lavender, fontSize: 14),
+                ],
+              ),
+              child: Column(
+                children: [
+                  Text(
+                    'Bienvenido a Mr. Zorro',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.lavender,
+                    ),
                   ),
-                ),
-              ],
+
+                  const SizedBox(height: 30),
+
+                  _inputField(
+                    "Email",
+                    _emailController,
+                    errorText: _emailError,
+                    keyboardType: TextInputType.emailAddress,
+                  ),
+                  const SizedBox(height: 20),
+
+                  _inputField(
+                    "Password",
+                    _passwordController,
+                    obscure: true,
+                    errorText: _passwordError,
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Save credentials option
+                  Row(
+                    children: [
+                      Switch(
+                        value: _saveCredentials,
+                        onChanged: (value) {
+                          setState(() => _saveCredentials = value);
+                        },
+                        activeColor: AppColors.lavender,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Guardar datos',
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  _button("Log In", _login, isLoading: _isLoading),
+                  const SizedBox(height: 20),
+
+                  TextButton(
+                    onPressed: () {},
+                    child: Text(
+                      '¿Olvidaste la contraseña?',
+                      style: TextStyle(color: AppColors.lavender, fontSize: 14),
+                    ),
+                  ),
+
+                  // Debug button for API testing (remove in production)
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const ApiTestScreen(),
+                        ),
+                      );
+                    },
+                    child: Text(
+                      'Test API Connection (Debug)',
+                      style: TextStyle(color: Colors.grey, fontSize: 12),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -279,101 +416,190 @@ class _SignUpTabState extends State<SignUpTab> {
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
   final _nicknameController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+
+  bool _isLoading = false;
+  String? _emailError;
+  String? _passwordError;
+  String? _confirmError;
+  String? _nicknameError;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmController.dispose();
+    _nicknameController.dispose();
+    super.dispose();
+  }
 
   Future<void> _signUp() async {
-    if (_passwordController.text != _confirmController.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Las contraseñas no coinciden')),
+    setState(() {
+      _emailError = ValidationUtils.getEmailError(_emailController.text.trim());
+      _passwordError = ValidationUtils.getPasswordError(
+        _passwordController.text,
       );
+      _confirmError = ValidationUtils.getPasswordConfirmationError(
+        _passwordController.text,
+        _confirmController.text,
+      );
+      _nicknameError = ValidationUtils.getNicknameError(
+        _nicknameController.text.trim(),
+      );
+    });
+
+    if (_emailError != null ||
+        _passwordError != null ||
+        _confirmError != null ||
+        _nicknameError != null) {
       return;
     }
 
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('is_logged_in', true);
-    await prefs.setString('user_email', _emailController.text);
-    await prefs.setString('user_nickname', _nicknameController.text);
+    setState(() => _isLoading = true);
 
-    if (!mounted) return;
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const MainMenuScreen()),
+    final result = await AuthService.signUp(
+      _emailController.text.trim(),
+      _passwordController.text,
+      _nicknameController.text.trim(),
     );
+
+    setState(() => _isLoading = false);
+
+    if (result['success']) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message']),
+            backgroundColor: Colors.green.shade400,
+          ),
+        );
+
+        // After successful signup, try to login
+        await _autoLoginAfterSignup();
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message']),
+            backgroundColor: Colors.red.shade400,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _autoLoginAfterSignup() async {
+    final loginResult = await AuthService.login(
+      _emailController.text.trim(),
+      _passwordController.text,
+    );
+
+    if (loginResult['success']) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('is_logged_in', true);
+
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const MainMenuScreen()),
+        );
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(10),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(30),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(30),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.lavender.withOpacity(0.15),
-                  blurRadius: 15,
-                  offset: const Offset(0, 5),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                Text(
-                  'Bienvenido a Soulcare',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.lavender,
+      child: Form(
+        key: _formKey,
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(30),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.lavender.withOpacity(0.15),
+                    blurRadius: 15,
+                    offset: const Offset(0, 5),
                   ),
-                ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  Text(
+                    'Bienvenido a Soulcare',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.lavender,
+                    ),
+                  ),
 
-                const SizedBox(height: 25),
+                  const SizedBox(height: 25),
 
-                _inputField("Email", _emailController),
-                const SizedBox(height: 15),
+                  _inputField(
+                    "Email",
+                    _emailController,
+                    errorText: _emailError,
+                    keyboardType: TextInputType.emailAddress,
+                  ),
+                  const SizedBox(height: 15),
 
-                _inputField("Password", _passwordController, obscure: true),
-                const SizedBox(height: 15),
+                  _inputField(
+                    "Password",
+                    _passwordController,
+                    obscure: true,
+                    errorText: _passwordError,
+                  ),
+                  const SizedBox(height: 15),
 
-                _inputField(
-                  "Repeat password",
-                  _confirmController,
-                  obscure: true,
-                ),
-                const SizedBox(height: 15),
+                  _inputField(
+                    "Repeat password",
+                    _confirmController,
+                    obscure: true,
+                    errorText: _confirmError,
+                  ),
+                  const SizedBox(height: 15),
 
-                _inputField("Nickname", _nicknameController),
-                const SizedBox(height: 30),
+                  _inputField(
+                    "Nickname",
+                    _nicknameController,
+                    errorText: _nicknameError,
+                  ),
+                  const SizedBox(height: 30),
 
-                _button("Create Account", _signUp),
+                  _button("Create Account", _signUp, isLoading: _isLoading),
 
-                const SizedBox(height: 15),
+                  const SizedBox(height: 15),
 
-                Text('Or', style: TextStyle(color: AppColors.textSecondary)),
-                const SizedBox(height: 15),
+                  Text('Or', style: TextStyle(color: AppColors.textSecondary)),
+                  const SizedBox(height: 15),
 
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: OutlinedButton.icon(
-                    onPressed: () {},
-                    icon: const Icon(Icons.g_mobiledata, size: 28),
-                    label: const Text('Continue with Google'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.textPrimary,
-                      side: BorderSide(color: AppColors.lavenderLight),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(25),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: OutlinedButton.icon(
+                      onPressed: () {},
+                      icon: const Icon(Icons.g_mobiledata, size: 28),
+                      label: const Text('Continue with Google'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.textPrimary,
+                        side: BorderSide(color: AppColors.lavenderLight),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(25),
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -387,38 +613,82 @@ Widget _inputField(
   String hint,
   TextEditingController controller, {
   bool obscure = false,
+  String? errorText,
+  TextInputType? keyboardType,
 }) {
-  return TextField(
-    controller: controller,
-    obscureText: obscure,
-    decoration: InputDecoration(
-      hintText: hint,
-      hintStyle: TextStyle(color: AppColors.textLight),
-      enabledBorder: UnderlineInputBorder(
-        borderSide: BorderSide(color: AppColors.lavenderLight),
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      TextField(
+        controller: controller,
+        obscureText: obscure,
+        keyboardType: keyboardType,
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: TextStyle(color: AppColors.textLight),
+          enabledBorder: UnderlineInputBorder(
+            borderSide: BorderSide(
+              color: errorText != null ? Colors.red : AppColors.lavenderLight,
+            ),
+          ),
+          focusedBorder: UnderlineInputBorder(
+            borderSide: BorderSide(
+              color: errorText != null ? Colors.red : AppColors.lavender,
+              width: 2,
+            ),
+          ),
+          errorBorder: const UnderlineInputBorder(
+            borderSide: BorderSide(color: Colors.red),
+          ),
+          focusedErrorBorder: const UnderlineInputBorder(
+            borderSide: BorderSide(color: Colors.red, width: 2),
+          ),
+        ),
       ),
-      focusedBorder: UnderlineInputBorder(
-        borderSide: BorderSide(color: AppColors.lavender, width: 2),
-      ),
-    ),
+      if (errorText != null) ...[
+        const SizedBox(height: 5),
+        Text(
+          errorText,
+          style: const TextStyle(
+            color: Colors.red,
+            fontSize: 12,
+            fontWeight: FontWeight.w400,
+          ),
+        ),
+      ],
+    ],
   );
 }
 
-Widget _button(String text, VoidCallback onPressed) {
+Widget _button(String text, VoidCallback? onPressed, {bool isLoading = false}) {
   return SizedBox(
     width: double.infinity,
     height: 50,
     child: ElevatedButton(
-      onPressed: onPressed,
+      onPressed: isLoading ? null : onPressed,
       style: ElevatedButton.styleFrom(
         backgroundColor: AppColors.lavender,
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+        disabledBackgroundColor: AppColors.lavender.withOpacity(0.6),
       ),
-      child: Text(
-        text,
-        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-      ),
+      child:
+          isLoading
+              ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2,
+                ),
+              )
+              : Text(
+                text,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
     ),
   );
 }

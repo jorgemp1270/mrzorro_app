@@ -5,6 +5,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'screens/splash_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/main_menu_screen.dart';
+import 'services/auth_service.dart';
 import 'utils/colors.dart';
 
 void main() async {
@@ -20,7 +21,7 @@ class SoulCareApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'SoulCare',
+      title: 'Mr. Zorro',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primaryColor: AppColors.lavender,
@@ -56,7 +57,6 @@ class _InitialScreenState extends State<InitialScreen> {
   Future<void> _checkFirstTime() async {
     final prefs = await SharedPreferences.getInstance();
     final isFirstTime = prefs.getBool('first_time') ?? true;
-    final isLoggedIn = prefs.getBool('is_logged_in') ?? false;
 
     await Future.delayed(const Duration(seconds: 2));
 
@@ -67,16 +67,22 @@ class _InitialScreenState extends State<InitialScreen> {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => const SplashScreen()),
       );
-    } else if (isLoggedIn) {
-      // Ya inició sesión - ir al menú principal
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const MainMenuScreen()),
-      );
     } else {
-      // Ya vio el splash pero no ha iniciado sesión
-      Navigator.of(
-        context,
-      ).pushReplacement(MaterialPageRoute(builder: (_) => const LoginScreen()));
+      // Check if user has saved credentials and try auto-login
+      final result = await AuthService.autoLogin();
+
+      if (result['success']) {
+        // Auto-login successful - go to main menu
+        await prefs.setBool('is_logged_in', true);
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const MainMenuScreen()),
+        );
+      } else {
+        // No saved credentials or auto-login failed - go to login
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
+      }
     }
   }
 

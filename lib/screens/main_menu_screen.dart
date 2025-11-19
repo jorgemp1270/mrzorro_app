@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../utils/colors.dart';
 import '../utils/constants.dart';
+import '../services/api_service.dart';
+import '../services/auth_service.dart';
 import 'journal_screen.dart';
 import 'camera_screen.dart';
 
@@ -76,11 +78,29 @@ class _HomeTabState extends State<HomeTab> {
   String _currentPhrase = '';
   String _currentFoxPhrase = '';
   final List<Map<String, String>> _messages = [];
+  bool _isLoading = false;
+  String? _currentUserId;
+  static const int maxMessages =
+      10; // Limit messages to prevent performance issues
 
   @override
   void initState() {
     super.initState();
     _refreshPhrases();
+    _getCurrentUser();
+  }
+
+  Future<void> _getCurrentUser() async {
+    final userId = await AuthService.getCurrentUserId();
+    setState(() {
+      _currentUserId = userId;
+    });
+  }
+
+  @override
+  void dispose() {
+    _chatController.dispose();
+    super.dispose();
   }
 
   void _refreshPhrases() {
@@ -98,36 +118,212 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   Future<void> _sendMessage() async {
-    if (_chatController.text.trim().isEmpty) return;
+    if (_chatController.text.trim().isEmpty || _currentUserId == null) return;
+    if (_isLoading) return;
 
     final userMessage = _chatController.text;
     setState(() {
       _messages.add({'role': 'user', 'content': userMessage});
+      // Keep only recent messages to prevent UI performance issues
+      if (_messages.length > maxMessages) {
+        _messages.removeRange(0, _messages.length - maxMessages);
+      }
       _chatController.clear();
+      _isLoading = true;
     });
 
-    // Aquí conectarías con tu API de IA
-    await Future.delayed(const Duration(seconds: 1));
+    try {
+      final result = await ApiService.generatePromptResponse(
+        userId: _currentUserId!,
+        prompt: userMessage,
+      );
 
-    setState(() {
-      _messages.add({
-        'role': 'assistant',
-        'content':
-            'Entiendo cómo te sientes. Estoy aquí para escucharte. ¿Quieres hablar más sobre eso?',
+      // Debug: Print the response to understand its structure
+      print('API Response: $result');
+
+      setState(() {
+        if (result['success']) {
+          final responseData = result['response'];
+          // Backend returns {user: "", response: ""} structure
+          final aiResponse =
+              responseData['response'] ??
+              responseData['message'] ??
+              'Lo siento, no pude generar una respuesta.';
+          _messages.add({'role': 'assistant', 'content': aiResponse});
+          // Keep only recent messages to prevent UI performance issues
+          if (_messages.length > maxMessages) {
+            _messages.removeRange(0, _messages.length - maxMessages);
+          }
+        } else {
+          _messages.add({
+            'role': 'assistant',
+            'content':
+                'Lo siento, hubo un error al procesar tu mensaje. ${result['message']}',
+          });
+          // Keep only recent messages to prevent UI performance issues
+          if (_messages.length > maxMessages) {
+            _messages.removeRange(0, _messages.length - maxMessages);
+          }
+        }
+        _isLoading = false;
       });
-    });
+    } catch (e) {
+      setState(() {
+        _messages.add({
+          'role': 'assistant',
+          'content':
+              'Lo siento, hubo un error de conexión. Por favor intenta de nuevo.',
+        });
+        // Keep only recent messages to prevent UI performance issues
+        if (_messages.length > maxMessages) {
+          _messages.removeRange(0, _messages.length - maxMessages);
+        }
+        _isLoading = false;
+      });
+    }
   }
 
-  void _registerEmotion(String emotion) {
+  void _registerEmotion(String emotion) async {
+    if (_currentUserId == null) return;
+
+    final emotionText = AppConstants.emotionsSpanish[emotion] ?? emotion;
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          'Emoción registrada: ${AppConstants.emotionsSpanish[emotion]}',
-        ),
+        content: Text('Emoción registrada: $emotionText'),
         duration: const Duration(seconds: 2),
       ),
     );
-    // Aquí guardarías la emoción en tu backend
+
+    // Send emotion as a prompt to the AI for personalized response
+    final emotionPrompt =
+        'Me siento $emotionText hoy. ¿Podrías darme algunos consejos o palabras de aliento?';
+
+    setState(() {
+      _messages.add({'role': 'user', 'content': 'Me siento $emotionText hoy.'});
+      // Keep only recent messages to prevent UI performance issues
+      if (_messages.length > maxMessages) {
+        _messages.removeRange(0, _messages.length - maxMessages);
+      }
+      _isLoading = true;
+    });
+
+    try {
+      final result = await ApiService.generatePromptResponse(
+        userId: _currentUserId!,
+        prompt: emotionPrompt,
+      );
+
+      setState(() {
+        if (result['success']) {
+          final responseData = result['response'];
+          final aiResponse =
+              responseData['response'] ??
+              'Entiendo cómo te sientes. Estoy aquí para apoyarte.';
+          _messages.add({'role': 'assistant', 'content': aiResponse});
+        } else {
+          _messages.add({
+            'role': 'assistant',
+            'content':
+                'Entiendo que te sientes $emotionText. Es normal sentir esto a veces.',
+          });
+        }
+        // Keep only recent messages to prevent UI performance issues
+        if (_messages.length > maxMessages) {
+          _messages.removeRange(0, _messages.length - maxMessages);
+        }
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _messages.add({
+          'role': 'assistant',
+          'content':
+              'Entiendo que te sientes $emotionText. Recuerda que es importante cuidar tu bienestar emocional.',
+        });
+        // Keep only recent messages to prevent UI performance issues
+        if (_messages.length > maxMessages) {
+          _messages.removeRange(0, _messages.length - maxMessages);
+        }
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _showMoreEmotions() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder:
+          (context) => Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '¿Cómo te sientes?',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.lavender,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: [
+                    _EmotionChip('sad', '😢', 'Triste'),
+                    _EmotionChip('angry', '😠', 'Enojado'),
+                    _EmotionChip('excited', '🤩', 'Emocionado'),
+                    _EmotionChip('tired', '😴', 'Cansado'),
+                    _EmotionChip('confused', '😕', 'Confundido'),
+                    _EmotionChip('grateful', '🙏', 'Agradecido'),
+                    _EmotionChip('motivated', '💪', 'Motivado'),
+                    _EmotionChip('peaceful', '😌', 'En paz'),
+                  ],
+                ),
+                const SizedBox(height: 20),
+              ],
+            ),
+          ),
+    );
+  }
+
+  Widget _EmotionChip(String emotion, String emoji, String label) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.pop(context);
+        _registerEmotion(emotion);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+        decoration: BoxDecoration(
+          color: AppColors.lavenderLight,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 20)),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -230,7 +426,9 @@ class _HomeTabState extends State<HomeTab> {
                           borderRadius: BorderRadius.circular(15),
                         ),
                         child: Text(
-                          '¡Hola! Soy Foxito, ¿Cómo te sientes hoy?',
+                          _currentUserId != null
+                              ? '¡Hola! Soy Foxito, tu compañero emocional. ¿Cómo te sientes hoy? Puedes contarme lo que quieras.'
+                              : 'Cargando...',
                           style: TextStyle(
                             color: AppColors.textPrimary,
                             fontSize: 15,
@@ -238,8 +436,10 @@ class _HomeTabState extends State<HomeTab> {
                         ),
                       )
                     else
-                      ...(_messages
+                      ...(_messages.reversed
                           .take(3)
+                          .toList()
+                          .reversed
                           .map(
                             (msg) => Padding(
                               padding: const EdgeInsets.only(bottom: 10),
@@ -271,11 +471,20 @@ class _HomeTabState extends State<HomeTab> {
                         Expanded(
                           child: TextField(
                             controller: _chatController,
+                            enabled: !_isLoading && _currentUserId != null,
+                            maxLines: null,
+                            textCapitalization: TextCapitalization.sentences,
                             decoration: InputDecoration(
-                              hintText: 'Escribe algo...',
+                              hintText:
+                                  _currentUserId != null
+                                      ? 'Cuéntame cómo te sientes...'
+                                      : 'Cargando...',
                               hintStyle: TextStyle(color: AppColors.textLight),
                               filled: true,
-                              fillColor: AppColors.background,
+                              fillColor:
+                                  _isLoading
+                                      ? AppColors.background.withOpacity(0.5)
+                                      : AppColors.background,
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(15),
                                 borderSide: BorderSide.none,
@@ -290,10 +499,23 @@ class _HomeTabState extends State<HomeTab> {
                         ),
                         const SizedBox(width: 10),
                         IconButton(
-                          onPressed: _sendMessage,
-                          icon: Icon(Icons.send, color: AppColors.lavender),
+                          onPressed: _isLoading ? null : _sendMessage,
+                          icon:
+                              _isLoading
+                                  ? SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: AppColors.lavender,
+                                    ),
+                                  )
+                                  : Icon(Icons.send, color: AppColors.lavender),
                           style: IconButton.styleFrom(
-                            backgroundColor: AppColors.lavenderLight,
+                            backgroundColor:
+                                _isLoading
+                                    ? AppColors.lavenderLight.withOpacity(0.5)
+                                    : AppColors.lavenderLight,
                             padding: const EdgeInsets.all(12),
                           ),
                         ),
@@ -322,9 +544,7 @@ class _HomeTabState extends State<HomeTab> {
                   _EmotionButton(
                     emoji: '🤔',
                     label: 'Otro',
-                    onTap: () {
-                      // Mostrar más emociones
-                    },
+                    onTap: _showMoreEmotions,
                   ),
                 ],
               ),
