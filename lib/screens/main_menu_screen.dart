@@ -436,7 +436,7 @@ class _HomeTabState extends State<HomeTab> {
                         ),
                         child: Text(
                           _currentUserId != null
-                              ? '¡Hola! Soy Foxito, tu compañero emocional. ¿Cómo te sientes hoy? Puedes contarme lo que quieras.'
+                              ? '¡Hola! Soy Mr. Zorro, tu compañero emocional. ¿Cómo te sientes hoy? Puedes contarme lo que quieras.'
                               : 'Cargando...',
                           style: TextStyle(
                             color: AppColors.textPrimary,
