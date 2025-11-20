@@ -113,18 +113,7 @@ git branch
 git status
 ```
 
-#### Opción 2: Clonar por SSH (recomendado para desarrollo)
-```bash
-# Configurar SSH key primero en GitHub
-ssh-keygen -t rsa -b 4096 -C "tu-email@ejemplo.com"
-# Agregar la clave pública a GitHub
-
-# Clonar con SSH
-git clone git@github.com:jorgemp1270/mrzorro_app.git
-cd mrzorro_app
-```
-
-#### Opción 3: Descargar ZIP
+#### Opción 2: Descargar ZIP
 1. Ir a [GitHub Repository](https://github.com/jorgemp1270/mrzorro_app)
 2. Click en "Code" → "Download ZIP"
 3. Extraer el archivo a tu directorio de desarrollo
