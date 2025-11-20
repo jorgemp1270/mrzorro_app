@@ -85,34 +85,308 @@ POST /prompt        # Chat con IA (Gemini)
 POST /predict-image # Análisis de imágenes con IA
 ```
 
-## 🚀 Instalación y Configuración
+## 🚀 Instalación y Configuración Completa
 
-### Prerrequisitos
-- **Flutter SDK** >= 3.7.2
-- **Dart SDK** (incluido con Flutter)
-- **Android Studio** / VS Code con extensiones Flutter
-- **Git** para clonación del repositorio
-- **Emulador Android** o dispositivo físico
+### Prerrequisitos del Sistema
+Antes de comenzar, asegúrate de tener instalado lo siguiente:
 
-### Configuración del Proyecto
+- **Flutter SDK** >= 3.7.2 ([Descargar aquí](https://flutter.dev/docs/get-started/install))
+- **Dart SDK** (incluido automáticamente con Flutter)
+- **Git** para control de versiones ([Descargar aquí](https://git-scm.com/))
+- **Android Studio** + Android SDK ([Descargar aquí](https://developer.android.com/studio))
+- **VS Code** con extensiones Flutter/Dart (alternativa a Android Studio)
+- **JDK** 17 o superior (para compilación Android)
+- **Emulador Android** configurado o dispositivo físico con USB debugging
 
-#### 1. Clonar Repositorio
+### 📥 Clonación del Repositorio
+
+#### Opción 1: Clonar por HTTPS
 ```bash
-git clone [repository-url]
+# Clonar el repositorio principal
+git clone https://github.com/jorgemp1270/mrzorro_app.git
+
+# Navegar al directorio del proyecto
+cd mrzorro_app
+
+# Verificar que estás en la rama correcta
+git branch
+git status
+```
+
+#### Opción 2: Clonar por SSH (recomendado para desarrollo)
+```bash
+# Configurar SSH key primero en GitHub
+ssh-keygen -t rsa -b 4096 -C "tu-email@ejemplo.com"
+# Agregar la clave pública a GitHub
+
+# Clonar con SSH
+git clone git@github.com:jorgemp1270/mrzorro_app.git
 cd mrzorro_app
 ```
 
-#### 2. Instalación de Dependencias
+#### Opción 3: Descargar ZIP
+1. Ir a [GitHub Repository](https://github.com/jorgemp1270/mrzorro_app)
+2. Click en "Code" → "Download ZIP"
+3. Extraer el archivo a tu directorio de desarrollo
+4. Abrir terminal en la carpeta extraída
+
+### 🔧 Configuración Inicial del Entorno
+
+#### 1. Verificación de Flutter
 ```bash
-# Limpiar cache si es necesario
+# Verificar instalación de Flutter
+flutter doctor
+
+# Si aparecen issues, solucionarlos uno por uno:
+# - Android toolchain: Instalar/actualizar Android SDK
+# - VS Code/Android Studio: Instalar plugins de Flutter/Dart
+# - Emulador: Crear AVD desde Android Studio
+
+# Verificar versión
+flutter --version
+```
+
+#### 2. Configuración de Android
+```bash
+# Aceptar licencias de Android
+flutter doctor --android-licenses
+
+# Listar emuladores disponibles
+flutter emulators
+
+# Crear emulador si no tienes uno
+# Desde Android Studio: Tools > AVD Manager > Create Virtual Device
+```
+
+### 🛠️ Compilación del Proyecto
+
+#### Paso 1: Instalación de Dependencias
+```bash
+# Limpiar cache (recomendado para primer setup)
 flutter clean
 
-# Instalar dependencias
+# Instalar todas las dependencias
 flutter pub get
 
-# Verificar configuración
-flutter doctor
+# Verificar que no hay conflictos
+flutter pub deps
 ```
+
+#### Paso 2: Configuración de API Backend
+Actualizar configuración en `lib/config/api_config.dart`:
+
+```dart
+// Para desarrollo con emulador Android
+static const String baseUrl = 'http://10.0.2.2:8000';
+
+// Para dispositivo físico (cambiar por IP de tu PC)
+static const String baseUrl = 'http://192.168.1.XXX:8000';
+
+// Para backend en la nube (si aplicable)
+static const String baseUrl = 'https://tu-backend-url.com';
+```
+
+#### Paso 3: Compilación y Ejecución
+
+##### 🔍 Verificar Dispositivos Disponibles
+```bash
+# Listar todos los dispositivos conectados
+flutter devices
+
+# Ejemplo de salida:
+# Chrome (web)      • chrome     • web-javascript • Google Chrome
+# Android emulator  • emulator   • android        • android-x64
+# iPhone Simulator  • ios        • ios-simulator  • iOS Simulator
+```
+
+##### 🏃‍♂️ Ejecutar en Modo Debug (Desarrollo)
+```bash
+# Ejecutar en el primer dispositivo disponible
+flutter run
+
+# Ejecutar en dispositivo específico
+flutter run -d emulator-5554
+flutter run -d chrome
+flutter run -d "iPhone Simulator"
+
+# Ejecutar con hot reload habilitado (automático en debug)
+flutter run --hot
+```
+
+##### 🚀 Compilar Release (Producción)
+```bash
+# Para Android APK
+flutter build apk --release
+
+# Para Android App Bundle (recomendado para Google Play)
+flutter build appbundle --release
+
+# Para iOS (requiere macOS y Xcode)
+flutter build ios --release
+
+# Los archivos compilados se encuentran en:
+# build/app/outputs/flutter-apk/app-release.apk
+# build/app/outputs/bundle/release/app-release.aab
+```
+
+### 📱 Instalación en Dispositivos
+
+#### Android APK
+```bash
+# Instalar APK en dispositivo conectado
+flutter install
+
+# O manualmente con ADB
+adb install build/app/outputs/flutter-apk/app-release.apk
+```
+
+#### Android Studio Integration
+```bash
+# Abrir proyecto en Android Studio
+android-studio .
+
+# O desde menú: File > Open > Seleccionar carpeta mrzorro_app
+```
+
+### 🐛 Solución de Problemas de Compilación
+
+#### Error: "Flutter doctor issues"
+```bash
+# Problema común: Android toolchain
+# Solución: Instalar Android SDK desde Android Studio
+
+# Problema: Licencias no aceptadas
+flutter doctor --android-licenses
+# Escribir 'y' para aceptar todas
+
+# Problema: Emulador no disponible
+# Solución: Crear AVD desde Android Studio
+```
+
+#### Error: "Gradle build failed"
+```bash
+# Limpiar build cache
+flutter clean
+cd android
+./gradlew clean
+cd ..
+flutter pub get
+flutter run
+
+# Si persiste, verificar:
+# - Java/JDK 17+ instalado
+# - Variables de entorno JAVA_HOME y ANDROID_HOME
+```
+
+#### Error: "Pod install failed" (iOS)
+```bash
+cd ios
+pod install --repo-update
+cd ..
+flutter run
+```
+
+#### Error: "Network connection failed"
+```bash
+# Verificar conectividad
+curl -I http://10.0.2.2:8000
+ping google.com
+
+# Para emulador, usar 10.0.2.2 en lugar de localhost
+# Para dispositivo físico, usar IP real de la PC
+```
+
+### ⚡ Scripts de Automatización
+
+#### Crear script de build (build.sh/build.bat)
+```bash
+#!/bin/bash
+# build.sh para Linux/macOS
+
+echo "🧹 Limpiando proyecto..."
+flutter clean
+
+echo "📦 Instalando dependencias..."
+flutter pub get
+
+echo "🔍 Verificando configuración..."
+flutter doctor
+
+echo "🏗️ Compilando APK..."
+flutter build apk --release
+
+echo "✅ Build completado!"
+echo "📱 APK disponible en: build/app/outputs/flutter-apk/app-release.apk"
+```
+
+```batch
+@echo off
+REM build.bat para Windows
+
+echo 🧹 Limpiando proyecto...
+flutter clean
+
+echo 📦 Instalando dependencias...
+flutter pub get
+
+echo 🔍 Verificando configuración...
+flutter doctor
+
+echo 🏗️ Compilando APK...
+flutter build apk --release
+
+echo ✅ Build completado!
+echo 📱 APK disponible en: build\app\outputs\flutter-apk\app-release.apk
+pause
+```
+
+### 📋 Referencia Rápida de Comandos
+
+#### Comandos Esenciales
+```bash
+# Setup inicial (solo primera vez)
+git clone https://github.com/jorgemp1270/mrzorro_app.git
+cd mrzorro_app
+flutter pub get
+
+# Desarrollo diario
+flutter run                    # Ejecutar en modo debug
+flutter hot-reload             # R durante ejecución para hot reload
+flutter hot-restart            # Shift+R para hot restart
+
+# Verificaciones
+flutter doctor                 # Verificar configuración del entorno
+flutter devices                # Ver dispositivos disponibles
+flutter pub deps               # Ver dependencias y conflictos
+
+# Builds de producción
+flutter build apk --release    # APK para Android
+flutter build appbundle        # App Bundle para Google Play Store
+
+# Limpieza (cuando hay problemas)
+flutter clean && flutter pub get
+```
+
+#### Atajos de Desarrollo
+```bash
+# Durante flutter run:
+r       # Hot reload (recarga cambios sin reiniciar)
+R       # Hot restart (reinicio completo)
+h       # Mostrar ayuda de comandos
+q       # Salir de la aplicación
+o       # Cambiar plataforma (Android/iOS)
+```
+
+#### Gestión de Branches
+```bash
+# Trabajo con Git
+git pull origin main           # Actualizar código local
+git checkout -b feature/nueva-feature  # Crear nueva branch
+git add . && git commit -m "Descripción"  # Commit cambios
+git push origin feature/nueva-feature     # Subir cambios
+```
+
+### Configuración del Proyecto
 
 #### 3. Configuración de API
 Actualizar `lib/config/api_config.dart` según tu entorno:
