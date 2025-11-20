@@ -370,24 +370,43 @@ class _HomeTabState extends State<HomeTab> {
                   const SizedBox(width: 10),
                   Row(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(Icons.apple, color: Colors.red[700], size: 20),
-                            const SizedBox(width: 5),
-                            Text(
-                              _points,
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                      GestureDetector(
+                        onTap:
+                            () => ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Tus puntos se actualizarán la próxima vez que inicies sesión',
+                                ),
+                                duration: const Duration(seconds: 2),
+                              ),
                             ),
-                          ],
+                        child: Container(
+                          margin: const EdgeInsets.only(right: 10),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.apple,
+                                color: Colors.red[700],
+                                size: 20,
+                              ),
+                              const SizedBox(width: 5),
+                              Text(
+                                '$_points',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                       const SizedBox(width: 10),

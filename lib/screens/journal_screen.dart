@@ -93,7 +93,15 @@ class _JournalScreenState extends State<JournalScreen> {
               final dateB = DateTime.parse(b['date']);
               return dateB.compareTo(dateA);
             });
-            _entriesThisYear = _previousEntries.length;
+
+            // Filter entries for current year only
+            final currentYear = DateTime.now().year;
+            final thisYearEntries = _previousEntries.where((entry) {
+              final entryDate = DateTime.parse(entry['date']);
+              return entryDate.year == currentYear;
+            }).toList();
+
+            _entriesThisYear = thisYearEntries.length;
           });
         }
       } else {
@@ -270,6 +278,7 @@ class _JournalScreenState extends State<JournalScreen> {
     // Abrir entrada del diario
     if (!mounted) return;
 
+    _entriesLocked = false;
     final result = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
@@ -338,25 +347,36 @@ class _JournalScreenState extends State<JournalScreen> {
           ),
         ),
         actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 10),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.apple, color: Colors.red[700], size: 20),
-                const SizedBox(width: 5),
-                Text(
-                  '$_points',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
+          GestureDetector(
+            onTap:
+                () => ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Tus puntos se actualizarán la próxima vez que inicies sesión',
+                    ),
+                    duration: const Duration(seconds: 2),
                   ),
                 ),
-              ],
+            child: Container(
+              margin: const EdgeInsets.only(right: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.apple, color: Colors.red[700], size: 20),
+                  const SizedBox(width: 5),
+                  Text(
+                    '$_points',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           IconButton(
@@ -694,8 +714,17 @@ class _JournalScreenState extends State<JournalScreen> {
                             ),
                           ),
                         ),
-                        if (_entriesLocked)
-                          Icon(Icons.lock, color: AppColors.lavender, size: 20),
+                        _entriesLocked
+                            ? Icon(
+                              Icons.lock,
+                              color: AppColors.lavender,
+                              size: 20,
+                            )
+                            : Icon(
+                              Icons.lock_open,
+                              color: AppColors.lavender,
+                              size: 20,
+                            ),
                       ],
                     ),
                     const SizedBox(height: 8),
