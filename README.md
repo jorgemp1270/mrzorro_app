@@ -1,220 +1,409 @@
-# Mr. Zorro - Flutter Emotional Wellness App
+# 🦊 Mr. Zorro - AI-Powered Emotional Wellness Journal
 
-Una aplicación de bienestar emocional desarrollada en Flutter que conecta con un backend FastAPI y utiliza inteligencia artificial para proporcionar apoyo emocional personalizado.
+Una aplicación avanzada de bienestar emocional desarrollada en Flutter que integra inteligencia artificial para proporcionar apoyo emocional personalizado, análisis de imágenes y seguimiento emocional inteligente.
 
-## 🦊 Características Principales
+## ✨ Características Principales
 
-### 💬 Chat Inteligente con IA
-- Conversaciones en tiempo real con Foxito, tu compañero emocional
-- Respuestas personalizadas basadas en tu historial de diario
-- Integración con Gemini AI para consejos contextuales
-- Soporte multiidioma (Español)
+### 🤖 Asistente de IA Emocional
+- **Chat inteligente** con Mr. Zorro, tu compañero emocional personalizado
+- **Respuestas contextuales** basadas en tu historial y estado emocional actual
+- **Integración Gemini AI** para consejos personalizados y empáticos
+- **Límite inteligente** de mensajes para mantener conversaciones focused (10 mensajes máx)
+- **Soporte multiidioma** con respuestas naturales en español
 
-### 🔐 Sistema de Autenticación Completo
-- Registro e inicio de sesión seguro
-- Almacenamiento cifrado de credenciales con Flutter Secure Storage
-- Auto-login inteligente al abrir la aplicación
-- Opción "Guardar datos" para conveniencia del usuario
+### 🔐 Sistema de Autenticación Avanzado
+- **Registro seguro** con validación en tiempo real
+- **Login automático** con credenciales cifradas
+- **Flutter Secure Storage** para protección máxima de datos
+- **Validación robusta** de email, contraseña y nickname
+- **Gestión de sesiones** persistente y segura
 
-### 📖 Diario Emocional
-- Registro diario de emociones y experiencias
-- Análisis de imágenes con ResNet-50
-- Recomendaciones personalizadas basadas en IA
-- Historial de entradas por fecha
+### 📖 Diario Emocional Inteligente
+- **Entradas agrupadas por mes** con navegación intuitiva
+- **12 emociones diferentes** con valores numéricos (1-10 escala)
+- **Selección visual de emociones** con chips interactivos
+- **Promedio emocional mensual** mostrado en barra dinámica
+- **Sincronización automática** de datos al crear/editar entradas
+- **Historial completo** con fechas y previsualización
 
-### 🎭 Gestión de Emociones
-- Registro rápido de emociones con botones intuitivos
-- Biblioteca extendida de 11 emociones diferentes
-- Modal interactivo para selección de emociones adicionales
-- Respuestas de IA personalizadas para cada estado emocional
+### 📷 Análisis de Imágenes con IA
+- **Captura inteligente** con análisis automático
+- **ResNet-50** para clasificación de imágenes
+- **Gemini AI** para descripciones contextuales detalladas
+- **Recomendaciones personalizadas** basadas en análisis visual
+- **Datos curiosos** relacionados con las imágenes
+- **Integración fluida** con entradas de diario
+- **Almacenamiento inteligente** por fecha en dispositivo
 
-### 📷 Análisis de Imágenes
-- Captura y análisis automático de fotos
-- Clasificación inteligente con modelos pre-entrenados
-- Integración de imágenes en el contexto del diario
+### 🎭 Gestión Emocional Completa
+- **Registro rápido** con botones de emociones principales
+- **Análisis de tendencias** con promedio mensual visual
+- **Colores dinámicos** que reflejan el estado emocional
+- **Feedback inmediato** del sistema de IA
+- **Seguimiento de progreso** emocional a lo largo del tiempo
+
+### 🏠 Experiencia de Usuario Premium
+- **Bottom navigation** con tres secciones principales
+- **Material Design 3** con colores personalizados
+- **Animaciones fluidas** y transiciones suaves
+- **Responsive design** adaptado a diferentes pantallas
+- **Dark/Light theme support** automático del sistema
 
 ## 🏗️ Arquitectura Técnica
 
 ### Frontend (Flutter)
-- **Lenguaje**: Dart
-- **UI Framework**: Flutter con Material Design
-- **Gestión de Estado**: StatefulWidget
-- **Almacenamiento Seguro**: flutter_secure_storage
-- **HTTP Client**: http package
-- **Navegación**: Material PageRoute
+```yaml
+- Framework: Flutter 3.7.2+
+- Lenguaje: Dart
+- UI Pattern: StatefulWidget + setState
+- Storage: flutter_secure_storage (cifrado)
+- HTTP: http package con manejo de errores
+- Images: image_picker + path_provider
+- Auth: local_auth (biométrica)
+- Navegación: Material PageRoute
+- Fonts: Google Fonts (Poppins)
+- Internacionalización: intl package
+```
 
-### Backend (FastAPI)
-- **Framework**: FastAPI (Python)
-- **Base de Datos**: TinyDB (JSON)
-- **IA**: Google Gemini AI
-- **Análisis de Imágenes**: PyTorch + ResNet-50
-- **Validación**: Pydantic
+### Backend Integration
+```python
+- Framework: FastAPI (Python)
+- Base de Datos: TinyDB (JSON-based)
+- IA: Google Gemini 2.5 Flash
+- Análisis Visual: PyTorch + ResNet-50
+- Validación: Pydantic
+- CORS: Configurado para desarrollo
+```
 
-### Integración de IA
-- **Gemini 2.5 Flash**: Para generación de respuestas contextuales
-- **ResNet-50**: Para clasificación de imágenes
-- **Prompts Estructurados**: Respuestas JSON validadas
+### Endpoints Implementados
+```http
+POST /login         # Autenticación de usuario
+POST /signup        # Registro de nuevos usuarios
+POST /diary         # Crear/editar entradas de diario
+GET  /diary/{user}  # Obtener todas las entradas
+POST /prompt        # Chat con IA (Gemini)
+POST /predict-image # Análisis de imágenes con IA
+```
 
 ## 🚀 Instalación y Configuración
 
 ### Prerrequisitos
-- Flutter SDK (>=3.7.2)
-- Python 3.8+
-- Android Studio / VS Code
-- Emulador Android o dispositivo físico
+- **Flutter SDK** >= 3.7.2
+- **Dart SDK** (incluido con Flutter)
+- **Android Studio** / VS Code con extensiones Flutter
+- **Git** para clonación del repositorio
+- **Emulador Android** o dispositivo físico
 
-### Backend Setup
+### Configuración del Proyecto
+
+#### 1. Clonar Repositorio
 ```bash
-# Navegar al directorio del backend
-cd backend
-
-# Instalar dependencias
-pip install -r requirements.txt
-
-# Configurar variable de entorno para Gemini AI
-# Crear archivo .env con tu API key
-echo "GEMINI_API_KEY=tu_api_key_aqui" > .env
-
-# Ejecutar el servidor
-python -m uvicorn app.main:main --host 0.0.0.0 --port 8000
+git clone [repository-url]
+cd mrzorro_app
 ```
 
-### Flutter Setup
+#### 2. Instalación de Dependencias
 ```bash
+# Limpiar cache si es necesario
+flutter clean
+
 # Instalar dependencias
 flutter pub get
 
-# Ejecutar en emulador Android
+# Verificar configuración
+flutter doctor
+```
+
+#### 3. Configuración de API
+Actualizar `lib/config/api_config.dart` según tu entorno:
+
+```dart
+// Para emulador Android
+static const String baseUrl = 'http://10.0.2.2:8000';
+
+// Para dispositivo físico (usar IP de tu computadora)
+static const String baseUrl = 'http://192.168.1.XXX:8000';
+```
+
+#### 4. Ejecutar Aplicación
+```bash
+# Ver dispositivos disponibles
+flutter devices
+
+# Ejecutar en debug mode
 flutter run
 
-# O ejecutar en dispositivo específico
-flutter devices
-flutter run -d [device_id]
+# Ejecutar en release mode
+flutter run --release
 ```
 
-## 📱 Uso de la Aplicación
+## 📱 Guía de Uso
 
-### Primer Uso
-1. **Splash Screen**: Bienvenida inicial con introducción a la app
-2. **Registro**: Crear cuenta con email, contraseña y nickname
-3. **Login**: Iniciar sesión con validación en tiempo real
-4. **Auto-login**: La app recuerda tus credenciales si eliges "Guardar datos"
+### Primera Experiencia
+1. **Splash Screen** - Pantalla de bienvenida con logo Mr. Zorro
+2. **Registro/Login** - Crear cuenta o iniciar sesión existente
+3. **Main Menu** - Navegación por las tres secciones principales
 
-### Funcionalidades Principales
+### Funcionalidades Detalladas
 
-#### Chat con IA
-- Abre la app y ve al tab "Home"
-- Escribe tus pensamientos o preguntas en el chat
-- Recibe respuestas personalizadas de Foxito
-- El AI considera tu historial de diario para respuestas contextuales
+#### 🏠 Home Tab - Chat con IA
+- **Chat inteligente** con respuestas personalizadas
+- **Registro de emociones** rápido con botones dedicados
+- **Frases motivacionales** que cambian dinámicamente
+- **Sistema de puntos** visible en tiempo real
 
-#### Registro de Emociones
-- Toca los botones de emociones rápidas (Ansioso, Feliz)
-- Usa "Otro" para acceder a más emociones
-- Recibe consejos automáticos basados en tu estado emocional
+#### 📚 Journal Tab - Diario Personal
+- **Entradas agrupadas** por mes con año en contenedor
+- **Estadísticas visuales** (entradas anuales, rachas)
+- **Promedio emocional** con barra de colores dinámica
+- **Autenticación biométrica** para entradas privadas
+- **Prompts aleatorios** para inspirar escritura
 
-#### Diario Personal
-- Ve al tab "Journal" para escribir entradas
-- Agrega fotos que se analizan automáticamente
-- Revisa tu historial y progreso emocional
+#### 📸 Camera Tab - Análisis Visual
+- **Captura inteligente** con guías visuales
+- **Análisis automático** al tomar foto
+- **Resultados detallados** con descripciones IA
+- **Integración directa** a creación de entradas
 
-## 🔧 Configuración de Red
+### Creación de Entradas
+1. **Selección de emoción** (obligatoria) - 12 opciones disponibles
+2. **Título personalizado** (opcional)
+3. **Contenido libre** con soporte multilínea
+4. **Imagen opcional** con análisis automático
+5. **Guardado seguro** con API y almacenamiento local
 
-### Para Emulador Android
-La app está configurada para conectar con el backend en:
-- **URL**: `http://10.0.2.2:8000` (mapea a localhost:8000)
+## 🔧 Configuración Avanzada
 
-### Para Dispositivo Físico
-Actualiza `lib/config/api_config.dart`:
+### Personalización de Colores
+Modificar `lib/utils/colors.dart`:
 ```dart
-static const String baseUrl = 'http://[IP_DE_TU_COMPUTADORA]:8000';
+class AppColors {
+  static const Color lavender = Color(0xFF9B8EDB);
+  static const Color lavenderLight = Color(0xFFE8E4F3);
+  static const Color peach = Color(0xFFFFAB9D);
+  // Personalizar según preferencias
+}
 ```
 
-## 📦 Dependencias Principales
+### Configuración de Emociones
+Actualizar `lib/utils/constants.dart`:
+```dart
+static final Map<String, String> emotionsSpanish = {
+  'happy': 'Feliz',        // Valor: 8.5
+  'sad': 'Triste',         // Valor: 2.5
+  'excited': 'Emocionado', // Valor: 9.0
+  // Agregar más emociones según necesidad
+};
+```
 
-### Flutter
+### Network Security (Android)
+Para desarrollo con HTTP, agregar en `android/app/src/main/AndroidManifest.xml`:
+```xml
+<application
+    android:usesCleartextTraffic="true">
+```
+
+## 📊 Sistema de Valores Emocionales
+
+### Escala de Emociones (1-10)
+```
+😠 Angry      → 1.5  (Muy Negativo)
+😰 Anxious    → 2.0  (Negativo)
+😢 Sad        → 2.5  (Negativo)
+😴 Tired      → 3.0  (Ligeramente Negativo)
+😕 Confused   → 3.5  (Neutral-Negativo)
+😌 Calm       → 7.0  (Positivo)
+🙏 Grateful   → 9.5  (Muy Positivo)
+😊 Happy      → 8.5  (Muy Positivo)
+🤩 Excited    → 9.0  (Muy Positivo)
+```
+
+### Cálculo de Promedios
+- **Mensual**: Entradas del mes actual
+- **Fallback**: Promedio general si no hay entradas del mes
+- **Visual**: Barra de gradiente con indicador posicional
+- **Actualización**: Automática al crear/editar entradas
+
+## 🔐 Seguridad y Privacidad
+
+### Protección de Datos
+```dart
+// Credenciales cifradas
+flutter_secure_storage: ^9.2.2
+
+// Autenticación biométrica opcional
+local_auth: ^2.1.7
+
+// Headers de seguridad en API calls
+'Content-Type': 'application/json'
+```
+
+### Validaciones Implementadas
+- **Email**: Patrón RFC 5322 con regex robusto
+- **Contraseña**: 8+ caracteres, letras + números
+- **Nickname**: 2-20 caracteres, caracteres especiales permitidos
+- **Sanitización**: Entrada de texto limpia en formularios
+
+### Almacenamiento Local
+- **Imágenes**: Carpeta interna por fecha (`/JournalImages/`)
+- **Credenciales**: Flutter Secure Storage (cifrado)
+- **Configuración**: SharedPreferences para settings
+
+## 📦 Dependencias Completas
+
+### Core Dependencies
 ```yaml
 dependencies:
-  flutter_secure_storage: ^9.2.2  # Almacenamiento seguro
-  http: ^1.1.0                     # Cliente HTTP
-  google_fonts: ^6.1.0            # Fuentes personalizadas
-  image_picker: ^1.0.7            # Captura de imágenes
-  shared_preferences: ^2.2.2      # Preferencias locales
+  flutter:
+    sdk: flutter
+  google_fonts: ^6.1.0            # Tipografías personalizadas
+  http: ^1.1.0                     # Cliente HTTP robusto
+  intl: ^0.19.0                    # Internacionalización/fechas
+  path_provider: ^2.1.1           # Acceso a directorios sistema
+  flutter_secure_storage: ^9.2.2   # Almacenamiento cifrado
+  shared_preferences: ^2.2.2       # Preferencias simples
   local_auth: ^2.1.7              # Autenticación biométrica
+  image_picker: ^1.0.7            # Captura de imágenes
 ```
 
-### Python Backend
-```text
-fastapi                # Framework web
-uvicorn               # Servidor ASGI
-pydantic              # Validación de datos
-tinydb                # Base de datos JSON
-google-genai          # Cliente Gemini AI
-torch                 # PyTorch para ML
-torchvision          # Modelos pre-entrenados
-pillow               # Procesamiento de imágenes
-python-dotenv        # Variables de entorno
+### Estructura de Archivos
+```
+lib/
+├── config/
+│   └── api_config.dart          # Configuración de endpoints
+├── screens/
+│   ├── splash_screen.dart       # Pantalla inicial
+│   ├── login_screen.dart        # Autenticación
+│   ├── signup_screen.dart       # Registro usuarios
+│   ├── main_menu_screen.dart    # Navegación principal
+│   ├── journal_screen.dart      # Lista de entradas
+│   ├── journal_entry_screen.dart # Editor de entradas
+│   └── camera_screen.dart       # Análisis de imágenes
+├── services/
+│   ├── api_service.dart         # Llamadas HTTP
+│   └── auth_service.dart        # Gestión autenticación
+├── utils/
+│   ├── colors.dart              # Paleta de colores
+│   ├── constants.dart           # Constantes app
+│   ├── file_utils.dart          # Utilidades archivos
+│   └── validation_utils.dart    # Validaciones
+└── widgets/
+    └── custom_widgets.dart      # Componentes reutilizables
 ```
 
-## 🔐 Seguridad
+## 🧪 Testing y Debugging
 
-### Almacenamiento de Credenciales
-- Las credenciales se almacenan cifradas usando Flutter Secure Storage
-- Los tokens de usuario se guardan de forma segura
-- Opción de limpieza completa de datos al cerrar sesión
-
-### Validaciones
-- **Email**: Formato RFC 5322 válido
-- **Contraseña**: Mínimo 8 caracteres, letras y números
-- **Nickname**: 2-20 caracteres, caracteres especiales permitidos
-
-## 🌐 Endpoints de la API
-
-### Autenticación
-- `POST /login` - Iniciar sesión
-- `POST /signup` - Registrar usuario
-
-### Diario
-- `GET /diary/{user}` - Obtener entradas del usuario
-- `GET /diary/{user}/{date}` - Obtener entradas por fecha
-- `POST /diary` - Crear nueva entrada
-
-### IA y Análisis
-- `POST /prompt` - Generar respuesta de IA
-- `POST /predict-image` - Analizar imagen
-
-## 🧪 Testing
-
-### Backend Testing
+### Pruebas de Conectividad
 ```bash
-# Probar conexión básica
+# Verificar backend en localhost
 curl http://localhost:8000
 
-# Probar registro
+# Probar desde emulador Android
+curl http://10.0.2.2:8000
+
+# Test de registro
 curl -X POST http://localhost:8000/signup \
   -H "Content-Type: application/json" \
-  -d '{"email":"test@test.com","password":"test123","nickname":"Test"}'
+  -d '{"email":"test@example.com","password":"test1234","nickname":"TestUser"}'
 ```
 
-### Flutter Testing
-- Usa el botón "Test API Connection" en la pantalla de login
-- Verifica conectividad de red antes de usar funciones principales
+### Debug en Flutter
+```bash
+# Ejecutar con logs detallados
+flutter run --verbose
+
+# Analizar rendimiento
+flutter run --profile
+
+# Verificar dependencias
+flutter pub deps
+
+# Limpiar build cache
+flutter clean && flutter pub get
+```
+
+### Logging Implementado
+- **API calls**: Print statements en servicios
+- **Navigation**: Debug info en navegación
+- **Emotion tracking**: Logs de cálculos emocionales
+- **Image processing**: Feedback de análisis
 
 ## 🐛 Solución de Problemas
 
-### Error de Conexión
-- Verificar que el backend esté ejecutándose en puerto 8000
-- Confirmar que el emulador puede acceder a localhost (10.0.2.2:8000)
-- Revisar configuración de firewall
+### Errores Comunes
 
-### Problemas de Autenticación
-- Verificar formato de email y contraseña
-- Limpiar caché de la app si persisten problemas
-- Revisar logs del backend para errores de validación
+#### ❌ "Connection refused"
+```bash
+# Verificar que el backend esté corriendo
+# Para emulador, usar 10.0.2.2:8000
+# Para dispositivo físico, usar IP real de la PC
+```
 
-### Issues de Gemini AI
-- Verificar que la API key de Gemini esté configurada
-- Revisar límites de cuota de la API
-- Verificar conectividad a internet
+#### ❌ "Secure storage error"
+```bash
+# Limpiar datos de la app
+flutter clean
+# Desinstalar y reinstalar app
+```
 
-*Mr. Zorro - Tu compañero de bienestar emocional* 🦊✨
+#### ❌ "Image picker not working"
+```bash
+# Verificar permisos en AndroidManifest.xml
+# Agregar permisos de cámara y storage
+```
+
+#### ❌ "Biometric auth fails"
+```bash
+# Configurar PIN/huella en emulador
+# Verificar hardware compatible en dispositivo
+```
+
+### Logs Útiles
+```dart
+// En caso de problemas, buscar estos logs:
+print('API Response: $response');
+print('User ID: $_currentUserId');
+print('Emotion average: ${_calculateCurrentMonthAverage()}');
+print('Image analysis: $_aiAnalysis');
+```
+
+## 📈 Próximas Mejoras
+
+### Características Planeadas
+- 🌙 **Modo Oscuro** nativo
+- 📊 **Dashboard** de analytics emocionales
+- 🔔 **Notificaciones** de recordatorios
+- 📱 **Widget** de pantalla principal
+- 🌍 **Múltiples idiomas** (inglés, francés)
+- 🎨 **Temas personalizables** por usuario
+- 📈 **Gráficos avanzados** de tendencias emocionales
+
+### Optimizaciones Técnicas
+- ⚡ **State management** con Riverpod/Bloc
+- 🗄️ **Database local** con SQLite
+- 🔄 **Sincronización** offline-first
+- 🎯 **Testing** automatizado completo
+- 📦 **CI/CD** pipeline setup
+
+---
+
+## 👥 Contribuciones
+
+### Como Contribuir
+1. Fork del repositorio
+2. Crear branch feature (`git checkout -b feature/nueva-caracteristica`)
+3. Commit cambios (`git commit -m 'Agregar nueva característica'`)
+4. Push al branch (`git push origin feature/nueva-caracteristica`)
+5. Crear Pull Request
+
+### Estándares de Código
+- **Lint**: Seguir `analysis_options.yaml`
+- **Formato**: Usar `flutter format .`
+- **Documentación**: Comentarios en funciones complejas
+- **Testing**: Agregar tests para nuevas funcionalidades
+
+---
+
+**Mr. Zorro - Tu compañero inteligente de bienestar emocional** 🦊✨
+
+*Desarrollado con ❤️ usando Flutter y tecnologías de IA avanzadas*
