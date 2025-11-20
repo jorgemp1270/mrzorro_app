@@ -470,6 +470,10 @@ class _SignUpTabState extends State<SignUpTab> {
     setState(() => _isLoading = false);
 
     if (result['success']) {
+      await AuthService.saveCredentials(
+        _emailController.text.trim(),
+        _passwordController.text,
+      );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

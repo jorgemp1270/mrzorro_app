@@ -80,6 +80,7 @@ class _HomeTabState extends State<HomeTab> {
   String _currentFoxPhrase = '';
   final List<Map<String, String>> _messages = [];
   bool _isLoading = false;
+  String _points = '';
   String? _currentUserId;
   static const int maxMessages =
       10; // Limit messages to prevent performance issues
@@ -89,6 +90,7 @@ class _HomeTabState extends State<HomeTab> {
     super.initState();
     _refreshPhrases();
     _getCurrentUser();
+    _getUserPoints();
   }
 
   Future<void> _getCurrentUser() async {
@@ -116,6 +118,15 @@ class _HomeTabState extends State<HomeTab> {
             AppConstants.foxPhrases.length,
           )];
     });
+  }
+
+  Future<void> _getUserPoints() async {
+    final userInfo = await AuthService.getCurrentUserInfo();
+    if (userInfo != null && mounted) {
+      setState(() {
+        _points = userInfo['points'].toString();
+      });
+    }
   }
 
   Future<void> _sendMessage() async {
@@ -372,8 +383,8 @@ class _HomeTabState extends State<HomeTab> {
                           children: [
                             Icon(Icons.apple, color: Colors.red[700], size: 20),
                             const SizedBox(width: 5),
-                            const Text(
-                              '195',
+                            Text(
+                              _points,
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
                           ],

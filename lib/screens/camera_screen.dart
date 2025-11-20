@@ -129,6 +129,7 @@ class _CameraScreenState extends State<CameraScreen> {
             (_) => JournalEntryScreen(
               title: journalTitle,
               initialImage: savedImage,
+              aiAnalysis: _aiAnalysis,
             ),
       ),
     );
