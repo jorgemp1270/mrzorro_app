@@ -122,7 +122,7 @@ class _CameraScreenState extends State<CameraScreen> {
     }
 
     // Pasar la imagen y análisis AI directamente a JournalEntryScreen
-    Navigator.push(
+    final result = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
         builder:
@@ -133,6 +133,11 @@ class _CameraScreenState extends State<CameraScreen> {
             ),
       ),
     );
+
+    // If entry was created, return to journal screen with success indicator
+    if (result == true && mounted) {
+      Navigator.pop(context, true); // Return true to indicate entry was created
+    }
   }
 
   void _retakePicture() {

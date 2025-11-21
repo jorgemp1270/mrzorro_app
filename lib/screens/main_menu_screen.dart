@@ -2,12 +2,12 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:mrzorro_app/screens/login_screen.dart';
+import 'package:mrzorro_app/screens/shop_screen.dart';
 import '../utils/colors.dart';
 import '../utils/constants.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import 'journal_screen.dart';
-import 'camera_screen.dart';
 
 class MainMenuScreen extends StatefulWidget {
   const MainMenuScreen({super.key});
@@ -22,7 +22,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   final List<Widget> _screens = [
     const HomeTab(),
     const JournalScreen(),
-    const CameraScreen(),
+    const ShopScreen(),
   ];
 
   @override
@@ -56,9 +56,9 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
               label: 'Journal',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.camera_alt_outlined),
-              activeIcon: Icon(Icons.camera_alt),
-              label: 'Camera',
+              icon: Icon(Icons.shopping_bag_outlined),
+              activeIcon: Icon(Icons.shopping_bag),
+              label: 'Shop',
             ),
           ],
         ),
@@ -89,8 +89,9 @@ class _HomeTabState extends State<HomeTab> {
   void initState() {
     super.initState();
     _refreshPhrases();
-    _getCurrentUser();
-    _getUserPoints();
+    _getCurrentUser().then((_) {
+      _getUserPoints();
+    });
   }
 
   Future<void> _getCurrentUser() async {
@@ -121,11 +122,32 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   Future<void> _getUserPoints() async {
-    final userInfo = await AuthService.getCurrentUserInfo();
-    if (userInfo != null && mounted) {
-      setState(() {
-        _points = userInfo['points'].toString();
-      });
+    if (_currentUserId == null) return;
+
+    try {
+      final result = await ApiService.getUserPoints(_currentUserId!);
+      if (result['success'] == true && mounted) {
+        setState(() {
+          _points = (result['points'] ?? 0).toString();
+        });
+        print('User points loaded: $_points');
+      } else {
+        print('Error fetching user points: ${result['message']}');
+        // Set default points if API call fails
+        if (mounted) {
+          setState(() {
+            _points = '0';
+          });
+        }
+      }
+    } catch (e) {
+      print('Exception fetching user points: $e');
+      // Set default points if exception occurs
+      if (mounted) {
+        setState(() {
+          _points = '0';
+        });
+      }
     }
   }
 
@@ -371,15 +393,16 @@ class _HomeTabState extends State<HomeTab> {
                   Row(
                     children: [
                       GestureDetector(
-                        onTap:
-                            () => ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Tus puntos se actualizarán la próxima vez que inicies sesión',
-                                ),
-                                duration: const Duration(seconds: 2),
-                              ),
+                        onTap: () {
+                          // Refresh points when tapped
+                          _getUserPoints();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Puntos actualizados: $_points'),
+                              duration: const Duration(seconds: 2),
                             ),
+                          );
+                        },
                         child: Container(
                           margin: const EdgeInsets.only(right: 10),
                           padding: const EdgeInsets.symmetric(
@@ -399,7 +422,7 @@ class _HomeTabState extends State<HomeTab> {
                               ),
                               const SizedBox(width: 5),
                               Text(
-                                '$_points',
+                                _points.isNotEmpty ? '$_points' : '---',
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   color: Colors.black,

@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:local_auth/local_auth.dart';
+import 'package:mrzorro_app/screens/camera_screen.dart';
 import 'package:mrzorro_app/screens/login_screen.dart';
 import 'package:mrzorro_app/services/api_service.dart';
 import 'package:mrzorro_app/services/auth_service.dart';
@@ -36,8 +37,8 @@ class _JournalScreenState extends State<JournalScreen> {
 
   Future<void> _initializeData() async {
     await _getUserData();
-    await _getCurrentUser();
     await _getDiaryEntries(_currentUserId);
+    await _getUserPoints(); // Add points fetching to initialization
   }
 
   /// Refresh all data after entry creation/modification
@@ -48,6 +49,9 @@ class _JournalScreenState extends State<JournalScreen> {
     // Refresh user stats (points, streaks, etc.)
     await _getUserData();
 
+    // Refresh user points
+    await _getUserPoints();
+
     // Force rebuild of UI
     if (mounted) {
       setState(() {
@@ -56,21 +60,44 @@ class _JournalScreenState extends State<JournalScreen> {
     }
   }
 
-  Future<void> _getCurrentUser() async {
-    final userId = await AuthService.getCurrentUserId();
-    setState(() {
-      _currentUserId = userId;
-    });
-  }
-
   Future<void> _getUserData() async {
     final userInfo = await AuthService.getCurrentUserInfo();
     if (userInfo != null && mounted) {
       setState(() {
-        _points = userInfo['points'] ?? 0;
+        _currentUserId = userInfo['user'];
         _currentStreak = userInfo['streak'] ?? 0;
         _bestStreak = userInfo['best_streak'] ?? 0;
       });
+    }
+  }
+
+  Future<void> _getUserPoints() async {
+    if (_currentUserId == null) return;
+
+    try {
+      final result = await ApiService.getUserPoints(_currentUserId!);
+      if (result['success'] == true && mounted) {
+        setState(() {
+          _points = result['points'] ?? 0;
+        });
+        print('User points loaded: $_points');
+      } else {
+        print('Error fetching user points: ${result['message']}');
+        // Set default points if API call fails
+        if (mounted) {
+          setState(() {
+            _points = 0;
+          });
+        }
+      }
+    } catch (e) {
+      print('Exception fetching user points: $e');
+      // Set default points if exception occurs
+      if (mounted) {
+        setState(() {
+          _points = 0;
+        });
+      }
     }
   }
 
@@ -96,10 +123,11 @@ class _JournalScreenState extends State<JournalScreen> {
 
             // Filter entries for current year only
             final currentYear = DateTime.now().year;
-            final thisYearEntries = _previousEntries.where((entry) {
-              final entryDate = DateTime.parse(entry['date']);
-              return entryDate.year == currentYear;
-            }).toList();
+            final thisYearEntries =
+                _previousEntries.where((entry) {
+                  final entryDate = DateTime.parse(entry['date']);
+                  return entryDate.year == currentYear;
+                }).toList();
 
             _entriesThisYear = thisYearEntries.length;
           });
@@ -348,15 +376,16 @@ class _JournalScreenState extends State<JournalScreen> {
         ),
         actions: [
           GestureDetector(
-            onTap:
-                () => ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Tus puntos se actualizarán la próxima vez que inicies sesión',
-                    ),
-                    duration: const Duration(seconds: 2),
-                  ),
+            onTap: () {
+              // Refresh points when tapped
+              _getUserPoints();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Puntos actualizados: $_points'),
+                  duration: const Duration(seconds: 2),
                 ),
+              );
+            },
             child: Container(
               margin: const EdgeInsets.only(right: 10),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -369,7 +398,7 @@ class _JournalScreenState extends State<JournalScreen> {
                   Icon(Icons.apple, color: Colors.red[700], size: 20),
                   const SizedBox(width: 5),
                   Text(
-                    '$_points',
+                    _points > 0 ? '$_points' : '---',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Colors.black,
@@ -390,6 +419,31 @@ class _JournalScreenState extends State<JournalScreen> {
             },
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          final result = await Navigator.push<bool>(
+            context,
+            MaterialPageRoute(builder: (_) => const CameraScreen()),
+          );
+
+          // Refresh data if an entry was created from camera
+          if (result == true) {
+            _refreshAllData();
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Nueva entrada creada desde cámara'),
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
+        },
+        backgroundColor: AppColors.lavender,
+        child: const Icon(
+          Icons.camera_alt_outlined,
+          color: AppColors.textPrimary,
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),

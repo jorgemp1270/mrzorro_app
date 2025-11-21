@@ -149,4 +149,59 @@ class ApiService {
       return {'success': false, 'message': 'Error de conexión: $e'};
     }
   }
+
+  /// Make a purchase request
+  static Future<Map<String, dynamic>> makePurchase({
+    required String userId,
+    required String price,
+    required String theme
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${ApiConfig.purchaseUrl}'),
+        headers: ApiConfig.headers,
+        body: jsonEncode({
+          'user': userId,
+          'price': price,
+          'theme': theme,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {'success': true, 'response': data};
+      } else {
+        final errorData = jsonDecode(response.body);
+        return {
+          'success': false,
+          'message': errorData['detail'] ?? 'Error en la compra',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Error de conexión: $e'};
+    }
+  }
+
+  /// Get user points
+  static Future<Map<String, dynamic>> getUserPoints(String userId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConfig.pointsUrl}/$userId'),
+        headers: ApiConfig.headers,
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {'success': true, 'points': data['points']};
+      } else {
+        final errorData = jsonDecode(response.body);
+        return {
+          'success': false,
+          'message': errorData['detail'] ?? 'Error al obtener puntos',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Error de conexión: $e'};
+    }
+  }
 }
