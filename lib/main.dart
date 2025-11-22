@@ -6,12 +6,17 @@ import 'screens/splash_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/main_menu_screen.dart';
 import 'services/auth_service.dart';
+import 'services/theme_service.dart';
 import 'utils/colors.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // Inicializar la localización en español
   await initializeDateFormatting('es', null);
+
+  // Initialize ThemeService
+  await ThemeService().init();
+
   runApp(const SoulCareApp());
 }
 
@@ -20,21 +25,39 @@ class SoulCareApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Mr. Zorro',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primaryColor: AppColors.lavender,
-        scaffoldBackgroundColor: AppColors.background,
-        textTheme: GoogleFonts.poppinsTextTheme(),
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: AppColors.lavender,
-          primary: AppColors.lavender,
-          secondary: AppColors.peach,
-        ),
-        useMaterial3: true,
-      ),
-      home: const InitialScreen(),
+    return ListenableBuilder(
+      listenable: ThemeService(),
+      builder: (context, child) {
+        final currentTheme = ThemeService().currentTheme;
+        return MaterialApp(
+          title: 'Mr. Zorro',
+          debugShowCheckedModeBanner: false,
+          theme: ThemeData(
+            primaryColor: currentTheme.primaryColor,
+            scaffoldBackgroundColor: currentTheme.backgroundColor,
+            cardColor: currentTheme.cardColor,
+            textTheme: GoogleFonts.poppinsTextTheme().apply(
+              bodyColor: currentTheme.textColor,
+              displayColor: currentTheme.textColor,
+            ),
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: currentTheme.primaryColor,
+              primary: currentTheme.primaryColor,
+              secondary: currentTheme.secondaryColor,
+              background: currentTheme.backgroundColor,
+              surface: currentTheme.cardColor,
+              brightness:
+                  currentTheme.isDark ? Brightness.dark : Brightness.light,
+            ),
+            useMaterial3: true,
+            appBarTheme: AppBarTheme(
+              backgroundColor: currentTheme.backgroundColor,
+              foregroundColor: currentTheme.textColor,
+            ),
+          ),
+          home: const InitialScreen(),
+        );
+      },
     );
   }
 }

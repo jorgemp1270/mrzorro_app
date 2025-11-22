@@ -2,9 +2,10 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import '../utils/colors.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
+import '../services/theme_service.dart';
+import '../models/app_theme.dart';
 import 'package:mrzorro_app/utils/file_utils.dart';
 
 class JournalEntryScreen extends StatefulWidget {
@@ -129,7 +130,9 @@ class _JournalEntryScreenState extends State<JournalEntryScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Imagen añadida, el análisis de IA se realizará al guardar'),
+        content: Text(
+          'Imagen añadida, el análisis de IA se realizará al guardar',
+        ),
         duration: Duration(seconds: 3),
       ),
     );
@@ -218,38 +221,68 @@ class _JournalEntryScreenState extends State<JournalEntryScreen> {
   }
 
   void _showImageOptions() {
+    final themeService = ThemeService();
+    final currentTheme = themeService.currentTheme;
+    final currentFont = themeService.currentFont;
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       builder:
           (context) => Container(
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            decoration: BoxDecoration(
+              color: currentTheme.cardColor,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(20),
+              ),
             ),
             padding: const EdgeInsets.all(20),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 ListTile(
-                  leading: Icon(Icons.camera_alt, color: AppColors.lavender),
-                  title: const Text('Tomar foto'),
+                  leading: Icon(
+                    Icons.camera_alt,
+                    color: currentTheme.primaryColor,
+                  ),
+                  title: Text(
+                    'Tomar foto',
+                    style: (currentFont.style ?? const TextStyle()).copyWith(
+                      color: currentTheme.textColor,
+                    ),
+                  ),
                   onTap: () {
                     Navigator.pop(context);
                     _pickImage(ImageSource.camera);
                   },
                 ),
                 ListTile(
-                  leading: Icon(Icons.photo_library, color: AppColors.lavender),
-                  title: const Text('Elegir de galería'),
+                  leading: Icon(
+                    Icons.photo_library,
+                    color: currentTheme.primaryColor,
+                  ),
+                  title: Text(
+                    'Elegir de galería',
+                    style: (currentFont.style ?? const TextStyle()).copyWith(
+                      color: currentTheme.textColor,
+                    ),
+                  ),
                   onTap: () {
                     Navigator.pop(context);
                     _pickImage(ImageSource.gallery);
                   },
                 ),
                 ListTile(
-                  leading: Icon(Icons.close, color: AppColors.textSecondary),
-                  title: const Text('Cancelar'),
+                  leading: Icon(
+                    Icons.close,
+                    color: currentTheme.textColor.withOpacity(0.6),
+                  ),
+                  title: Text(
+                    'Cancelar',
+                    style: (currentFont.style ?? const TextStyle()).copyWith(
+                      color: currentTheme.textColor,
+                    ),
+                  ),
                   onTap: () => Navigator.pop(context),
                 ),
               ],
@@ -260,359 +293,477 @@ class _JournalEntryScreenState extends State<JournalEntryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 250, 244, 245),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: AppColors.lavender),
-          onPressed: () => Navigator.pop(context),
-        ),
-        actions: [
-          if (_isSaving)
-            const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-            )
-          else
-            IconButton(
-              icon: Icon(
-                Icons.check_circle,
-                color: AppColors.lavender,
-                size: 30,
-              ),
-              onPressed: _saveEntry,
+    final themeService = ThemeService();
+
+    return ListenableBuilder(
+      listenable: themeService,
+      builder: (context, child) {
+        final currentTheme = themeService.currentTheme;
+        final currentFont = themeService.currentFont;
+
+        return Scaffold(
+          backgroundColor: currentTheme.backgroundColor,
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            leading: IconButton(
+              icon: Icon(Icons.arrow_back, color: currentTheme.primaryColor),
+              onPressed: () => Navigator.pop(context),
             ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Title Field
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-              decoration: BoxDecoration(
-                color: AppColors.lavenderLight,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: TextField(
-                controller: _titleController,
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
-                decoration: const InputDecoration(
-                  hintText: 'Titulo',
-                  border: InputBorder.none,
-                  hintStyle: TextStyle(color: AppColors.textSecondary),
-                ),
+            title: Text(
+              'Entrada',
+              style: (currentFont.style ?? const TextStyle()).copyWith(
+                color: currentTheme.primaryColor,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
               ),
             ),
-
-            const SizedBox(height: 20),
-
-            // Emotion Selection Row
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: AppColors.lavenderLight,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '¿Cómo te sientes?',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 15),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _buildEmotionChip('happy', '😊', 'Feliz'),
-                      _buildEmotionChip('sad', '😢', 'Triste'),
-                      _buildEmotionChip('excited', '🤩', 'Emocionado'),
-                      _buildEmotionChip('calm', '😌', 'Tranquilo'),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _buildEmotionChip('anxious', '😰', 'Ansioso'),
-                      _buildEmotionChip('angry', '😠', 'Enojado'),
-                      _buildEmotionChip('tired', '😴', 'Cansado'),
-                      _buildEmotionChip('grateful', '🙏', 'Agradecido'),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            // Content Field
-            Container(
-              constraints: const BoxConstraints(minHeight: 300),
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: AppColors.lavenderLight,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: TextField(
-                controller: _contentController,
-                maxLines: null,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: AppColors.textPrimary,
-                  height: 1.5,
-                ),
-                decoration: const InputDecoration(
-                  hintText: 'Escribe algo...',
-                  border: InputBorder.none,
-                  hintStyle: TextStyle(color: AppColors.textSecondary),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            // Single Image Display
-            if (_images.isNotEmpty) ...[
-              Container(
-                height: 200,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.lavender.withOpacity(0.1),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Stack(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(20),
-                      child: Image.file(
-                        _images.first,
-                        width: double.infinity,
-                        height: 200,
-                        fit: BoxFit.cover,
+            actions: [
+              if (_isSaving)
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        currentTheme.primaryColor,
                       ),
                     ),
-                    Positioned(
-                      top: 10,
-                      right: 10,
-                      child: GestureDetector(
-                        onTap: () => _removeImage(0),
-                        child: Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: Colors.black54,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: const Icon(
-                            Icons.close,
-                            color: Colors.white,
-                            size: 18,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
+                )
+              else
+                IconButton(
+                  icon: Icon(
+                    Icons.check_circle,
+                    color: currentTheme.primaryColor,
+                    size: 30,
+                  ),
+                  onPressed: _saveEntry,
                 ),
-              ),
-              const SizedBox(height: 20),
             ],
-
-            // AI Analysis Section
-            if (widget.aiAnalysis != null) ...[
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.lavender.withOpacity(0.1),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
+          ),
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Title Field
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 15,
+                  ),
+                  decoration: BoxDecoration(
+                    color: currentTheme.cardColor,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: currentTheme.primaryColor.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: TextField(
+                    controller: _titleController,
+                    style: (currentFont.style ?? const TextStyle()).copyWith(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      color: currentTheme.textColor,
                     ),
-                  ],
+                    decoration: InputDecoration(
+                      hintText: 'Titulo',
+                      border: InputBorder.none,
+                      hintStyle: (currentFont.style ?? const TextStyle())
+                          .copyWith(
+                            color: currentTheme.textColor.withOpacity(0.5),
+                          ),
+                    ),
+                  ),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.analytics,
-                          color: AppColors.lavender,
-                          size: 24,
+
+                const SizedBox(height: 20),
+
+                // Emotion Selection Row
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: currentTheme.cardColor,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: currentTheme.primaryColor.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '¿Cómo te sientes?',
+                        style: (currentFont.style ?? const TextStyle())
+                            .copyWith(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: currentTheme.textColor,
+                            ),
+                      ),
+                      const SizedBox(height: 15),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          _buildEmotionChip(
+                            'happy',
+                            '😊',
+                            'Feliz',
+                            currentTheme,
+                          ),
+                          _buildEmotionChip(
+                            'sad',
+                            '😢',
+                            'Triste',
+                            currentTheme,
+                          ),
+                          _buildEmotionChip(
+                            'excited',
+                            '🤩',
+                            'Emocionado',
+                            currentTheme,
+                          ),
+                          _buildEmotionChip(
+                            'calm',
+                            '😌',
+                            'Tranquilo',
+                            currentTheme,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          _buildEmotionChip(
+                            'anxious',
+                            '😰',
+                            'Ansioso',
+                            currentTheme,
+                          ),
+                          _buildEmotionChip(
+                            'angry',
+                            '😠',
+                            'Enojado',
+                            currentTheme,
+                          ),
+                          _buildEmotionChip(
+                            'tired',
+                            '😴',
+                            'Cansado',
+                            currentTheme,
+                          ),
+                          _buildEmotionChip(
+                            'grateful',
+                            '🙏',
+                            'Agradecido',
+                            currentTheme,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                // Content Field
+                Container(
+                  constraints: const BoxConstraints(minHeight: 300),
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: currentTheme.cardColor,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: currentTheme.primaryColor.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: TextField(
+                    controller: _contentController,
+                    maxLines: null,
+                    style: (currentFont.style ?? const TextStyle()).copyWith(
+                      fontSize: 16,
+                      color: currentTheme.textColor,
+                      height: 1.5,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: 'Escribe algo...',
+                      border: InputBorder.none,
+                      hintStyle: (currentFont.style ?? const TextStyle())
+                          .copyWith(
+                            color: currentTheme.textColor.withOpacity(0.5),
+                          ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                // Single Image Display
+                if (_images.isNotEmpty) ...[
+                  Container(
+                    height: 200,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: currentTheme.primaryColor.withOpacity(0.1),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
                         ),
-                        const SizedBox(width: 10),
-                        Text(
-                          'Análisis de IA',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
+                      ],
+                    ),
+                    child: Stack(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(20),
+                          child: Image.file(
+                            _images.first,
+                            width: double.infinity,
+                            height: 200,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        Positioned(
+                          top: 10,
+                          right: 10,
+                          child: GestureDetector(
+                            onTap: () => _removeImage(0),
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: Colors.black54,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: const Icon(
+                                Icons.close,
+                                color: Colors.white,
+                                size: 18,
+                              ),
+                            ),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 15),
+                  ),
+                  const SizedBox(height: 20),
+                ],
 
-                    // Main description
-                    if (widget.aiAnalysis!['description'] != null)
-                      Text(
-                        widget.aiAnalysis!['description'],
-                        style: TextStyle(
-                          fontSize: 15,
-                          color: AppColors.textPrimary,
-                          height: 1.5,
+                // AI Analysis Section
+                if (widget.aiAnalysis != null) ...[
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: currentTheme.cardColor,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: currentTheme.primaryColor.withOpacity(0.1),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
                         ),
-                      ),
-
-                    // Recommendation section
-                    if (widget.aiAnalysis!['recommendation']?.isNotEmpty ==
-                        true) ...[
-                      const SizedBox(height: 15),
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: AppColors.lavenderLight,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
                           children: [
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.lightbulb,
-                                  color: AppColors.lavender,
-                                  size: 16,
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  'Recomendación',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.lavender,
-                                  ),
-                                ),
-                              ],
+                            Icon(
+                              Icons.analytics,
+                              color: currentTheme.primaryColor,
+                              size: 24,
                             ),
-                            const SizedBox(height: 6),
+                            const SizedBox(width: 10),
                             Text(
-                              widget.aiAnalysis!['recommendation'],
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: AppColors.textPrimary,
-                                height: 1.4,
-                              ),
+                              'Análisis de IA',
+                              style: (currentFont.style ?? const TextStyle())
+                                  .copyWith(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                    color: currentTheme.textColor,
+                                  ),
                             ),
                           ],
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 15),
 
-                    // Interesting fact section
-                    if (widget.aiAnalysis!['interesting_fact']?.isNotEmpty ==
-                        true) ...[
-                      const SizedBox(height: 10),
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: AppColors.peach.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.star,
-                                  color: AppColors.peach,
-                                  size: 16,
+                        // Main description
+                        if (widget.aiAnalysis!['description'] != null)
+                          Text(
+                            widget.aiAnalysis!['description'],
+                            style: (currentFont.style ?? const TextStyle())
+                                .copyWith(
+                                  fontSize: 15,
+                                  color: currentTheme.textColor,
+                                  height: 1.5,
                                 ),
-                                const SizedBox(width: 6),
+                          ),
+
+                        // Recommendation section
+                        if (widget.aiAnalysis!['recommendation']?.isNotEmpty ==
+                            true) ...[
+                          const SizedBox(height: 15),
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: currentTheme.primaryColor.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.lightbulb,
+                                      color: currentTheme.primaryColor,
+                                      size: 16,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      'Recomendación',
+                                      style: (currentFont.style ??
+                                              const TextStyle())
+                                          .copyWith(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w600,
+                                            color: currentTheme.primaryColor,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 6),
                                 Text(
-                                  'Dato Interesante',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.peach,
-                                  ),
+                                  widget.aiAnalysis!['recommendation'],
+                                  style: (currentFont.style ??
+                                          const TextStyle())
+                                      .copyWith(
+                                        fontSize: 13,
+                                        color: currentTheme.textColor,
+                                        height: 1.4,
+                                      ),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 6),
-                            Text(
-                              widget.aiAnalysis!['interesting_fact'],
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: AppColors.textPrimary,
-                                height: 1.4,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-            ],
+                          ),
+                        ],
 
-            // Add Image Button
-            Center(
-              child: ElevatedButton.icon(
-                onPressed: _showImageOptions,
-                icon: const Icon(Icons.add_photo_alternate),
-                label: const Text('Agregar foto'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.lavender,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 30,
-                    vertical: 15,
+                        // Interesting fact section
+                        if (widget
+                                .aiAnalysis!['interesting_fact']
+                                ?.isNotEmpty ==
+                            true) ...[
+                          const SizedBox(height: 10),
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: currentTheme.secondaryColor.withOpacity(
+                                0.1,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.star,
+                                      color: currentTheme.secondaryColor,
+                                      size: 16,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      'Dato Interesante',
+                                      style: (currentFont.style ??
+                                              const TextStyle())
+                                          .copyWith(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w600,
+                                            color: currentTheme.secondaryColor,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  widget.aiAnalysis!['interesting_fact'],
+                                  style: (currentFont.style ??
+                                          const TextStyle())
+                                      .copyWith(
+                                        fontSize: 13,
+                                        color: currentTheme.textColor,
+                                        height: 1.4,
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
                   ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(25),
+                  const SizedBox(height: 20),
+                ],
+
+                // Add Image Button
+                Center(
+                  child: ElevatedButton.icon(
+                    onPressed: _showImageOptions,
+                    icon: const Icon(Icons.add_photo_alternate),
+                    label: Text(
+                      'Agregar foto',
+                      style: (currentFont.style ?? const TextStyle()),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: currentTheme.primaryColor,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 30,
+                        vertical: 15,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(25),
+                      ),
+                    ),
                   ),
                 ),
-              ),
+
+                const SizedBox(height: 40),
+              ],
             ),
-
-            const SizedBox(height: 40),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildEmotionChip(String emotion, String emoji, String label) {
+  Widget _buildEmotionChip(
+    String emotion,
+    String emoji,
+    String label,
+    AppTheme theme,
+  ) {
     final isSelected = _selectedMood == emotion;
+    final currentFont = ThemeService().currentFont;
+
     return GestureDetector(
       onTap: () {
         setState(() {
@@ -622,15 +773,25 @@ class _JournalEntryScreenState extends State<JournalEntryScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.lavender : Colors.white,
+          color: isSelected ? theme.primaryColor : theme.cardColor,
           borderRadius: BorderRadius.circular(15),
           border: Border.all(
             color:
                 isSelected
-                    ? AppColors.lavender
-                    : AppColors.lavender.withOpacity(0.3),
+                    ? theme.primaryColor
+                    : theme.primaryColor.withOpacity(0.3),
             width: 1.5,
           ),
+          boxShadow:
+              isSelected
+                  ? [
+                    BoxShadow(
+                      color: theme.primaryColor.withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                  : null,
         ),
         child: Column(
           children: [
@@ -638,9 +799,9 @@ class _JournalEntryScreenState extends State<JournalEntryScreen> {
             const SizedBox(height: 2),
             Text(
               label,
-              style: TextStyle(
+              style: (currentFont.style ?? const TextStyle()).copyWith(
                 fontSize: 10,
-                color: isSelected ? Colors.white : AppColors.textPrimary,
+                color: isSelected ? Colors.white : theme.textColor,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
               ),
             ),

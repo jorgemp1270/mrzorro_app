@@ -9,8 +9,8 @@ class ApiConfig {
   static const String diaryEndpoint = '/diary';
   static const String predictImageEndpoint = '/predict-image';
   static const String promptEndpoint = '/prompt';
-  static const String purchaseEndpoint = '/purchase';
-  static const String pointsEndpoint = '/points';
+  static const String makePurchaseEndpoint = '/make-purchase';
+  static const String purchasesEndpoint = '/purchases';
 
   // Complete URLs
   static String get loginUrl => '$baseUrl$loginEndpoint';
@@ -18,8 +18,8 @@ class ApiConfig {
   static String get diaryUrl => '$baseUrl$diaryEndpoint';
   static String get predictImageUrl => '$baseUrl$predictImageEndpoint';
   static String get promptUrl => '$baseUrl$promptEndpoint';
-  static String get purchaseUrl => '$baseUrl$purchaseEndpoint';
-  static String get pointsUrl => '$baseUrl$pointsEndpoint';
+  static String get makePurchaseUrl => '$baseUrl$makePurchaseEndpoint';
+  static String get purchasesUrl => '$baseUrl$purchasesEndpoint';
 
   // Headers
   static const Map<String, String> headers = {

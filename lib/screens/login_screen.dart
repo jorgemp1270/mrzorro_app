@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../utils/colors.dart';
+import '../services/theme_service.dart';
 import '../utils/validation_utils.dart';
 import '../services/auth_service.dart';
 import 'main_menu_screen.dart';
@@ -41,143 +41,155 @@ class _LoginScreenState extends State<LoginScreen>
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
+    final themeService = ThemeService();
 
     // Altura real (imagen 2:3) y recorte a 2/3 de la altura
     final imageHeight = (screenWidth * 3 / 2) * (2 / 3);
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // -----------------------------------------------------
-            //                    IMAGEN SUPERIOR
-            // -----------------------------------------------------
-            Transform.translate(
-              offset: const Offset(
-                0,
-                -65,
-              ), //  ←← AJUSTA AQUÍ: valor negativo = la imagen sube más
-              child: SizedBox(
-                width: double.infinity,
-                height: imageHeight,
-                child: Stack(
-                  children: [
-                    ClipRect(
-                      child: SizedBox(
-                        width: double.infinity,
-                        height: imageHeight,
-                        child: Image.asset(
-                          'assets/images/fox.png',
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
+    return ListenableBuilder(
+      listenable: themeService,
+      builder: (context, child) {
+        final currentTheme = themeService.currentTheme;
+        final currentFont = themeService.currentFont;
 
-                    // DIFUMINADO inferior suave
-                    Positioned.fill(
-                      child: Align(
-                        alignment: Alignment.bottomCenter,
-                        child: Container(
-                          height: imageHeight * 0.35,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Colors.transparent,
-                                Colors.black.withOpacity(0.10),
-                                Colors.black.withOpacity(0.22),
-                              ],
+        return Scaffold(
+          backgroundColor: currentTheme.backgroundColor,
+          body: SafeArea(
+            child: Column(
+              children: [
+                // -----------------------------------------------------
+                //                    IMAGEN SUPERIOR
+                // -----------------------------------------------------
+                Transform.translate(
+                  offset: const Offset(
+                    0,
+                    -65,
+                  ), //  ←← AJUSTA AQUÍ: valor negativo = la imagen sube más
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: imageHeight,
+                    child: Stack(
+                      children: [
+                        ClipRect(
+                          child: SizedBox(
+                            width: double.infinity,
+                            height: imageHeight,
+                            child: Image.asset(
+                              'assets/images/fox.png',
+                              fit: BoxFit.cover,
                             ),
                           ),
                         ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
 
-            // -----------------------------------------------------
-            //          CONTENEDOR PARA SWITCH + CONTENIDO
-            // -----------------------------------------------------
-            Expanded(
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 0,
-                ),
-                child: Column(
-                  children: [
-                    // -----------------------------------------------------
-                    //               SWITCH LOGIN / SIGN UP
-                    // -----------------------------------------------------
-                    Container(
-                      height: 55,
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: AppColors.lavenderLight.withOpacity(0.25),
-                        borderRadius: BorderRadius.circular(40),
-                      ),
-                      child: Stack(
-                        children: [
-                          // Indicador de fondo animado (switch)
-                          AnimatedAlign(
-                            duration: const Duration(milliseconds: 230),
-                            alignment:
-                                _tabController.index == 0
-                                    ? Alignment.centerLeft
-                                    : Alignment.centerRight,
+                        // DIFUMINADO inferior suave
+                        Positioned.fill(
+                          child: Align(
+                            alignment: Alignment.bottomCenter,
                             child: Container(
-                              width:
-                                  (MediaQuery.of(context).size.width - 64) / 2,
+                              height: imageHeight * 0.35,
                               decoration: BoxDecoration(
-                                color: AppColors.lavender,
-                                borderRadius: BorderRadius.circular(30),
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    Colors.transparent,
+                                    Colors.black.withOpacity(0.10),
+                                    Colors.black.withOpacity(0.22),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
 
-                          // TabBar sin bordes ni indicadores
-                          TabBar(
-                            controller: _tabController,
-                            indicatorColor: Colors.transparent,
-                            dividerColor: Colors.transparent,
-                            labelColor: Colors.white,
-                            unselectedLabelColor: AppColors.textSecondary,
-                            labelStyle: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            tabs: const [
-                              Tab(text: "Login"),
-                              Tab(text: "Sign up"),
+                // -----------------------------------------------------
+                //          CONTENEDOR PARA SWITCH + CONTENIDO
+                // -----------------------------------------------------
+                Expanded(
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 0,
+                    ),
+                    child: Column(
+                      children: [
+                        // -----------------------------------------------------
+                        //               SWITCH LOGIN / SIGN UP
+                        // -----------------------------------------------------
+                        Container(
+                          height: 55,
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: currentTheme.primaryColor.withOpacity(0.25),
+                            borderRadius: BorderRadius.circular(40),
+                          ),
+                          child: Stack(
+                            children: [
+                              // Indicador de fondo animado (switch)
+                              AnimatedAlign(
+                                duration: const Duration(milliseconds: 230),
+                                alignment:
+                                    _tabController.index == 0
+                                        ? Alignment.centerLeft
+                                        : Alignment.centerRight,
+                                child: Container(
+                                  width:
+                                      (MediaQuery.of(context).size.width - 64) /
+                                      2,
+                                  decoration: BoxDecoration(
+                                    color: currentTheme.primaryColor,
+                                    borderRadius: BorderRadius.circular(30),
+                                  ),
+                                ),
+                              ),
+
+                              // TabBar sin bordes ni indicadores
+                              TabBar(
+                                controller: _tabController,
+                                indicatorColor: Colors.transparent,
+                                dividerColor: Colors.transparent,
+                                labelColor: Colors.white,
+                                unselectedLabelColor: currentTheme.textColor,
+                                labelStyle: (currentFont.style ??
+                                        const TextStyle())
+                                    .copyWith(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                tabs: const [
+                                  Tab(text: "Login"),
+                                  Tab(text: "Sign up"),
+                                ],
+                              ),
                             ],
                           ),
-                        ],
-                      ),
-                    ),
+                        ),
 
-                    const SizedBox(height: 0),
+                        const SizedBox(height: 0),
 
-                    // -----------------------------------------------------
-                    //                       CONTENIDO
-                    // -----------------------------------------------------
-                    Expanded(
-                      child: TabBarView(
-                        controller: _tabController,
-                        children: const [LoginTab(), SignUpTab()],
-                      ),
+                        // -----------------------------------------------------
+                        //                       CONTENIDO
+                        // -----------------------------------------------------
+                        Expanded(
+                          child: TabBarView(
+                            controller: _tabController,
+                            children: const [LoginTab(), SignUpTab()],
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
@@ -294,6 +306,10 @@ class _LoginTabState extends State<LoginTab> {
 
   @override
   Widget build(BuildContext context) {
+    final themeService = ThemeService();
+    final currentTheme = themeService.currentTheme;
+    final currentFont = themeService.currentFont;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(10),
       child: Form(
@@ -303,11 +319,11 @@ class _LoginTabState extends State<LoginTab> {
             Container(
               padding: const EdgeInsets.all(30),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: currentTheme.cardColor,
                 borderRadius: BorderRadius.circular(30),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.lavender.withOpacity(0.15),
+                    color: currentTheme.primaryColor.withOpacity(0.15),
                     blurRadius: 15,
                     offset: const Offset(0, 5),
                   ),
@@ -317,10 +333,10 @@ class _LoginTabState extends State<LoginTab> {
                 children: [
                   Text(
                     'Bienvenido a Mr. Zorro',
-                    style: TextStyle(
+                    style: (currentFont.style ?? const TextStyle()).copyWith(
                       fontSize: 24,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.lavender,
+                      color: currentTheme.primaryColor,
                     ),
                   ),
 
@@ -331,6 +347,7 @@ class _LoginTabState extends State<LoginTab> {
                     _emailController,
                     errorText: _emailError,
                     keyboardType: TextInputType.emailAddress,
+                    themeService: themeService,
                   ),
                   const SizedBox(height: 20),
 
@@ -339,6 +356,7 @@ class _LoginTabState extends State<LoginTab> {
                     _passwordController,
                     obscure: true,
                     errorText: _passwordError,
+                    themeService: themeService,
                   ),
                   const SizedBox(height: 20),
 
@@ -348,10 +366,11 @@ class _LoginTabState extends State<LoginTab> {
                       Expanded(
                         child: Text(
                           'Guardar mis datos para iniciar sesión automáticamente',
-                          style: TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 14,
-                          ),
+                          style: (currentFont.style ?? const TextStyle())
+                              .copyWith(
+                                color: currentTheme.textColor,
+                                fontSize: 14,
+                              ),
                           overflow: TextOverflow.visible,
                           softWrap: true,
                         ),
@@ -362,21 +381,29 @@ class _LoginTabState extends State<LoginTab> {
                         onChanged: (value) {
                           setState(() => _saveCredentials = value);
                         },
-                        activeColor: AppColors.lavender,
+                        activeColor: currentTheme.primaryColor,
                       ),
                     ],
                   ),
 
                   const SizedBox(height: 20),
 
-                  _button("Log In", _login, isLoading: _isLoading),
+                  _button(
+                    "Log In",
+                    _login,
+                    isLoading: _isLoading,
+                    themeService: themeService,
+                  ),
                   const SizedBox(height: 20),
 
                   TextButton(
                     onPressed: () {},
                     child: Text(
                       '¿Olvidaste la contraseña?',
-                      style: TextStyle(color: AppColors.lavender, fontSize: 14),
+                      style: (currentFont.style ?? const TextStyle()).copyWith(
+                        color: currentTheme.primaryColor,
+                        fontSize: 14,
+                      ),
                     ),
                   ),
 
@@ -391,7 +418,10 @@ class _LoginTabState extends State<LoginTab> {
                     },
                     child: Text(
                       'Test API Connection (Debug)',
-                      style: TextStyle(color: Colors.grey, fontSize: 12),
+                      style: (currentFont.style ?? const TextStyle()).copyWith(
+                        color: Colors.grey,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
                 ],
@@ -517,6 +547,10 @@ class _SignUpTabState extends State<SignUpTab> {
 
   @override
   Widget build(BuildContext context) {
+    final themeService = ThemeService();
+    final currentTheme = themeService.currentTheme;
+    final currentFont = themeService.currentFont;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(10),
       child: Form(
@@ -526,11 +560,11 @@ class _SignUpTabState extends State<SignUpTab> {
             Container(
               padding: const EdgeInsets.all(30),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: currentTheme.cardColor,
                 borderRadius: BorderRadius.circular(30),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.lavender.withOpacity(0.15),
+                    color: currentTheme.primaryColor.withOpacity(0.15),
                     blurRadius: 15,
                     offset: const Offset(0, 5),
                   ),
@@ -539,11 +573,11 @@ class _SignUpTabState extends State<SignUpTab> {
               child: Column(
                 children: [
                   Text(
-                    'Bienvenido a Soulcare',
-                    style: TextStyle(
+                    'Bienvenido a Mr. Zorro',
+                    style: (currentFont.style ?? const TextStyle()).copyWith(
                       fontSize: 22,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.lavender,
+                      color: currentTheme.primaryColor,
                     ),
                   ),
 
@@ -554,6 +588,7 @@ class _SignUpTabState extends State<SignUpTab> {
                     _emailController,
                     errorText: _emailError,
                     keyboardType: TextInputType.emailAddress,
+                    themeService: themeService,
                   ),
                   const SizedBox(height: 15),
 
@@ -562,6 +597,7 @@ class _SignUpTabState extends State<SignUpTab> {
                     _passwordController,
                     obscure: true,
                     errorText: _passwordError,
+                    themeService: themeService,
                   ),
                   const SizedBox(height: 15),
 
@@ -570,6 +606,7 @@ class _SignUpTabState extends State<SignUpTab> {
                     _confirmController,
                     obscure: true,
                     errorText: _confirmError,
+                    themeService: themeService,
                   ),
                   const SizedBox(height: 15),
 
@@ -577,14 +614,25 @@ class _SignUpTabState extends State<SignUpTab> {
                     "Nickname",
                     _nicknameController,
                     errorText: _nicknameError,
+                    themeService: themeService,
                   ),
                   const SizedBox(height: 30),
 
-                  _button("Create Account", _signUp, isLoading: _isLoading),
+                  _button(
+                    "Create Account",
+                    _signUp,
+                    isLoading: _isLoading,
+                    themeService: themeService,
+                  ),
 
                   const SizedBox(height: 15),
 
-                  Text('Or', style: TextStyle(color: AppColors.textSecondary)),
+                  Text(
+                    'Or',
+                    style: (currentFont.style ?? const TextStyle()).copyWith(
+                      color: currentTheme.textColor,
+                    ),
+                  ),
                   const SizedBox(height: 15),
 
                   SizedBox(
@@ -593,10 +641,15 @@ class _SignUpTabState extends State<SignUpTab> {
                     child: OutlinedButton.icon(
                       onPressed: () {},
                       icon: const Icon(Icons.g_mobiledata, size: 28),
-                      label: const Text('Continue with Google'),
+                      label: Text(
+                        'Continue with Google',
+                        style: (currentFont.style ?? const TextStyle()),
+                      ),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.textPrimary,
-                        side: BorderSide(color: AppColors.lavenderLight),
+                        foregroundColor: currentTheme.textColor,
+                        side: BorderSide(
+                          color: currentTheme.primaryColor.withOpacity(0.5),
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(25),
                         ),
@@ -623,7 +676,11 @@ Widget _inputField(
   bool obscure = false,
   String? errorText,
   TextInputType? keyboardType,
+  required ThemeService themeService,
 }) {
+  final currentTheme = themeService.currentTheme;
+  final currentFont = themeService.currentFont;
+
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
@@ -631,17 +688,25 @@ Widget _inputField(
         controller: controller,
         obscureText: obscure,
         keyboardType: keyboardType,
+        style: (currentFont.style ?? const TextStyle()).copyWith(
+          color: currentTheme.textColor,
+        ),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: TextStyle(color: AppColors.textLight),
+          hintStyle: (currentFont.style ?? const TextStyle()).copyWith(
+            color: currentTheme.textColor.withOpacity(0.5),
+          ),
           enabledBorder: UnderlineInputBorder(
             borderSide: BorderSide(
-              color: errorText != null ? Colors.red : AppColors.lavenderLight,
+              color:
+                  errorText != null
+                      ? Colors.red
+                      : currentTheme.primaryColor.withOpacity(0.5),
             ),
           ),
           focusedBorder: UnderlineInputBorder(
             borderSide: BorderSide(
-              color: errorText != null ? Colors.red : AppColors.lavender,
+              color: errorText != null ? Colors.red : currentTheme.primaryColor,
               width: 2,
             ),
           ),
@@ -657,7 +722,7 @@ Widget _inputField(
         const SizedBox(height: 5),
         Text(
           errorText,
-          style: const TextStyle(
+          style: (currentFont.style ?? const TextStyle()).copyWith(
             color: Colors.red,
             fontSize: 12,
             fontWeight: FontWeight.w400,
@@ -668,17 +733,25 @@ Widget _inputField(
   );
 }
 
-Widget _button(String text, VoidCallback? onPressed, {bool isLoading = false}) {
+Widget _button(
+  String text,
+  VoidCallback? onPressed, {
+  bool isLoading = false,
+  required ThemeService themeService,
+}) {
+  final currentTheme = themeService.currentTheme;
+  final currentFont = themeService.currentFont;
+
   return SizedBox(
     width: double.infinity,
     height: 50,
     child: ElevatedButton(
       onPressed: isLoading ? null : onPressed,
       style: ElevatedButton.styleFrom(
-        backgroundColor: AppColors.lavender,
+        backgroundColor: currentTheme.primaryColor,
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
-        disabledBackgroundColor: AppColors.lavender.withOpacity(0.6),
+        disabledBackgroundColor: currentTheme.primaryColor.withOpacity(0.6),
       ),
       child:
           isLoading
@@ -692,7 +765,7 @@ Widget _button(String text, VoidCallback? onPressed, {bool isLoading = false}) {
               )
               : Text(
                 text,
-                style: const TextStyle(
+                style: (currentFont.style ?? const TextStyle()).copyWith(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),

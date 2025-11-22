@@ -151,19 +151,22 @@ class ApiService {
   }
 
   /// Make a purchase request
+  /// Only one of theme or font should be non-null
   static Future<Map<String, dynamic>> makePurchase({
     required String userId,
     required String price,
-    required String theme
+    required String? theme,
+    required String? font,
   }) async {
     try {
       final response = await http.post(
-        Uri.parse('${ApiConfig.purchaseUrl}'),
+        Uri.parse('${ApiConfig.makePurchaseUrl}'),
         headers: ApiConfig.headers,
         body: jsonEncode({
           'user': userId,
           'price': price,
           'theme': theme,
+          'font': font,
         }),
       );
 
@@ -182,22 +185,27 @@ class ApiService {
     }
   }
 
-  /// Get user points
-  static Future<Map<String, dynamic>> getUserPoints(String userId) async {
+  /// Get user purchases
+  static Future<Map<String, dynamic>> getUserPurchases(String userId) async {
     try {
       final response = await http.get(
-        Uri.parse('${ApiConfig.pointsUrl}/$userId'),
+        Uri.parse('${ApiConfig.purchasesUrl}/$userId'),
         headers: ApiConfig.headers,
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        return {'success': true, 'points': data['points']};
+        return {
+          'success': true,
+          'points': data['points'],
+          'themes': data['themes'],
+          'fonts': data['fonts'],
+        };
       } else {
         final errorData = jsonDecode(response.body);
         return {
           'success': false,
-          'message': errorData['detail'] ?? 'Error al obtener puntos',
+          'message': errorData['detail'] ?? 'Error al obtener datos de compras',
         };
       }
     } catch (e) {

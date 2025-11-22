@@ -7,6 +7,7 @@ import '../utils/colors.dart';
 import '../utils/constants.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
+import '../services/theme_service.dart';
 import 'journal_screen.dart';
 
 class MainMenuScreen extends StatefulWidget {
@@ -27,42 +28,50 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: _screens[_selectedIndex],
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10),
-          ],
-        ),
-        child: BottomNavigationBar(
-          currentIndex: _selectedIndex,
-          onTap: (index) => setState(() => _selectedIndex = index),
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: Colors.white,
-          selectedItemColor: AppColors.lavender,
-          unselectedItemColor: AppColors.textSecondary,
-          selectedLabelStyle: const TextStyle(fontSize: 12),
-          unselectedLabelStyle: const TextStyle(fontSize: 12),
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined),
-              activeIcon: Icon(Icons.home),
-              label: 'Home',
+    // Listen to theme changes
+    return ListenableBuilder(
+      listenable: ThemeService(),
+      builder: (context, child) {
+        final currentTheme = ThemeService().currentTheme;
+
+        return Scaffold(
+          body: _screens[_selectedIndex],
+          bottomNavigationBar: Container(
+            decoration: BoxDecoration(
+              boxShadow: [
+                BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10),
+              ],
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.book_outlined),
-              activeIcon: Icon(Icons.book),
-              label: 'Journal',
+            child: BottomNavigationBar(
+              currentIndex: _selectedIndex,
+              onTap: (index) => setState(() => _selectedIndex = index),
+              type: BottomNavigationBarType.fixed,
+              backgroundColor: currentTheme.cardColor,
+              selectedItemColor: currentTheme.primaryColor,
+              unselectedItemColor: AppColors.textSecondary,
+              selectedLabelStyle: const TextStyle(fontSize: 12),
+              unselectedLabelStyle: const TextStyle(fontSize: 12),
+              items: const [
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.home_outlined),
+                  activeIcon: Icon(Icons.home),
+                  label: 'Home',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.book_outlined),
+                  activeIcon: Icon(Icons.book),
+                  label: 'Journal',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.shopping_bag_outlined),
+                  activeIcon: Icon(Icons.shopping_bag),
+                  label: 'Shop',
+                ),
+              ],
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.shopping_bag_outlined),
-              activeIcon: Icon(Icons.shopping_bag),
-              label: 'Shop',
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
@@ -125,7 +134,7 @@ class _HomeTabState extends State<HomeTab> {
     if (_currentUserId == null) return;
 
     try {
-      final result = await ApiService.getUserPoints(_currentUserId!);
+      final result = await ApiService.getUserPurchases(_currentUserId!);
       if (result['success'] == true && mounted) {
         setState(() {
           _points = (result['points'] ?? 0).toString();
@@ -285,14 +294,20 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   void _showMoreEmotions() {
+    final themeService = ThemeService();
+    final currentTheme = themeService.currentTheme;
+    final currentFont = themeService.currentFont;
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       builder:
           (context) => Container(
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            decoration: BoxDecoration(
+              color: currentTheme.cardColor,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(20),
+              ),
             ),
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -301,10 +316,10 @@ class _HomeTabState extends State<HomeTab> {
               children: [
                 Text(
                   '¿Cómo te sientes?',
-                  style: TextStyle(
+                  style: (currentFont.style ?? const TextStyle()).copyWith(
                     fontSize: 20,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.lavender,
+                    color: currentTheme.primaryColor,
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -330,6 +345,10 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   Widget _EmotionChip(String emotion, String emoji, String label) {
+    final themeService = ThemeService();
+    final currentTheme = themeService.currentTheme;
+    final currentFont = themeService.currentFont;
+
     return GestureDetector(
       onTap: () {
         Navigator.pop(context);
@@ -338,7 +357,7 @@ class _HomeTabState extends State<HomeTab> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
         decoration: BoxDecoration(
-          color: AppColors.lavenderLight,
+          color: currentTheme.primaryColor.withOpacity(0.2),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Row(
@@ -348,9 +367,9 @@ class _HomeTabState extends State<HomeTab> {
             const SizedBox(width: 8),
             Text(
               label,
-              style: TextStyle(
+              style: (currentFont.style ?? const TextStyle()).copyWith(
                 fontSize: 14,
-                color: AppColors.textPrimary,
+                color: currentTheme.textColor,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -364,327 +383,371 @@ class _HomeTabState extends State<HomeTab> {
   Widget build(BuildContext context) {
     final dateFormat = DateFormat('EEEE, d \'de\' MMMM', 'es');
     final today = dateFormat.format(DateTime.now());
+    final themeService = ThemeService();
 
-    return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 250, 244, 245),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Row(
+    return ListenableBuilder(
+      listenable: themeService,
+      builder: (context, child) {
+        final currentTheme = themeService.currentTheme;
+        final currentFont = themeService.currentFont;
+
+        return Scaffold(
+          backgroundColor: currentTheme.backgroundColor,
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: Text(
-                      _currentPhrase,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.lavender,
+                  // Header
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          _currentPhrase,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: (currentFont.style ?? const TextStyle())
+                              .copyWith(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w600,
+                                color: currentTheme.primaryColor,
+                              ),
+                        ),
                       ),
+                      const SizedBox(width: 10),
+                      Row(
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              // Refresh points when tapped
+                              _getUserPoints();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Puntos actualizados: $_points',
+                                  ),
+                                  duration: const Duration(seconds: 2),
+                                ),
+                              );
+                            },
+                            child: Container(
+                              margin: const EdgeInsets.only(right: 10),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: currentTheme.cardColor,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.apple,
+                                    color: Colors.red[700],
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 5),
+                                  Text(
+                                    _points.isNotEmpty ? '$_points' : '---',
+                                    style: (currentFont.style ??
+                                            const TextStyle())
+                                        .copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color: currentTheme.textColor,
+                                        ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          IconButton(
+                            icon: Icon(
+                              Icons.logout,
+                              color: currentTheme.primaryColor,
+                            ),
+                            onPressed: () {
+                              AuthService.logout();
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const LoginScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 25),
+
+                  // Chat Card
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: currentTheme.cardColor,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: currentTheme.primaryColor.withOpacity(0.1),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          today,
+                          style: (currentFont.style ?? const TextStyle())
+                              .copyWith(
+                                fontSize: 14,
+                                color: currentTheme.textColor.withOpacity(0.7),
+                                fontWeight: FontWeight.w500,
+                              ),
+                        ),
+                        const SizedBox(height: 15),
+
+                        // Messages
+                        if (_messages.isEmpty)
+                          Container(
+                            padding: const EdgeInsets.all(15),
+                            decoration: BoxDecoration(
+                              color: currentTheme.primaryColor.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                            child: Text(
+                              _currentUserId != null
+                                  ? '¡Hola! Soy Mr. Zorro, tu compañero emocional. ¿Cómo te sientes hoy? Puedes contarme lo que quieras.'
+                                  : 'Cargando...',
+                              style: (currentFont.style ?? const TextStyle())
+                                  .copyWith(
+                                    color: currentTheme.textColor,
+                                    fontSize: 15,
+                                  ),
+                            ),
+                          )
+                        else
+                          ...(_messages.reversed
+                              .take(3)
+                              .toList()
+                              .reversed
+                              .map(
+                                (msg) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 10),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(15),
+                                    decoration: BoxDecoration(
+                                      color:
+                                          msg['role'] == 'user'
+                                              ? currentTheme.primaryColor
+                                                  .withOpacity(0.2)
+                                              : currentTheme.primaryColor
+                                                  .withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(15),
+                                    ),
+                                    child: Text(
+                                      msg['content']!,
+                                      style: (currentFont.style ??
+                                              const TextStyle())
+                                          .copyWith(
+                                            color: currentTheme.textColor,
+                                            fontSize: 15,
+                                          ),
+                                    ),
+                                  ),
+                                ),
+                              )),
+
+                        const SizedBox(height: 15),
+
+                        // Input field
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: _chatController,
+                                enabled: !_isLoading && _currentUserId != null,
+                                maxLines: null,
+                                textCapitalization:
+                                    TextCapitalization.sentences,
+                                style: (currentFont.style ?? const TextStyle())
+                                    .copyWith(color: currentTheme.textColor),
+                                decoration: InputDecoration(
+                                  hintText:
+                                      _currentUserId != null
+                                          ? 'Cuéntame cómo te sientes...'
+                                          : 'Cargando...',
+                                  hintStyle: (currentFont.style ??
+                                          const TextStyle())
+                                      .copyWith(
+                                        color: currentTheme.textColor
+                                            .withOpacity(0.5),
+                                      ),
+                                  filled: true,
+                                  fillColor:
+                                      _isLoading
+                                          ? currentTheme.backgroundColor
+                                              .withOpacity(0.5)
+                                          : currentTheme.backgroundColor,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(15),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 15,
+                                    vertical: 12,
+                                  ),
+                                ),
+                                onSubmitted: (_) => _sendMessage(),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            IconButton(
+                              onPressed: _isLoading ? null : _sendMessage,
+                              icon:
+                                  _isLoading
+                                      ? SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: currentTheme.primaryColor,
+                                        ),
+                                      )
+                                      : Icon(
+                                        Icons.send,
+                                        color: currentTheme.primaryColor,
+                                      ),
+                              style: IconButton.styleFrom(
+                                backgroundColor:
+                                    _isLoading
+                                        ? currentTheme.primaryColor.withOpacity(
+                                          0.1,
+                                        )
+                                        : currentTheme.primaryColor.withOpacity(
+                                          0.2,
+                                        ),
+                                padding: const EdgeInsets.all(12),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 10),
+
+                  const SizedBox(height: 25),
+
+                  // Emotion Buttons
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    mainAxisSize: MainAxisSize.max,
                     children: [
+                      Expanded(
+                        child: _EmotionButton(
+                          emoji: '😊',
+                          label: 'Estoy Feliz',
+                          onTap: () => _registerEmotion('happy'),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _EmotionButton(
+                          emoji: '😢',
+                          label: 'Estoy Triste',
+                          onTap: () => _registerEmotion('sad'),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _EmotionButton(
+                          emoji: '🤔',
+                          label: 'Otro',
+                          onTap: () => _showMoreEmotions(),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  // 🦊 ========================================
+                  // 🦊 ZORRITO + FOX CARD INTEGRADOS
+                  // 🦊 ========================================
+                  const SizedBox(height: 10),
+
+                  Column(
+                    children: [
+                      // Zorrito (arriba)
+                      Image.asset(
+                        'assets/images/hola.png',
+                        width: double.infinity,
+                        height: 250, // 🎯 AJUSTA LA ALTURA DEL ZORRITO AQUÍ
+                        fit: BoxFit.contain,
+                      ),
+                      const SizedBox(height: 10),
+                      // 🎯 AJUSTA EL ESPACIO ENTRE EL ZORRITO Y LA CARD AQUÍ
+                      // Fox Card (abajo)
                       GestureDetector(
-                        onTap: () {
-                          // Refresh points when tapped
-                          _getUserPoints();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Puntos actualizados: $_points'),
-                              duration: const Duration(seconds: 2),
-                            ),
-                          );
-                        },
+                        onTap: _refreshPhrases,
                         child: Container(
-                          margin: const EdgeInsets.only(right: 10),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
+                          padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: currentTheme.cardColor,
                             borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: currentTheme.primaryColor.withOpacity(
+                                  0.1,
+                                ),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
                           ),
                           child: Row(
                             children: [
-                              Icon(
-                                Icons.apple,
-                                color: Colors.red[700],
-                                size: 20,
+                              Container(
+                                padding: const EdgeInsets.all(15),
+                                decoration: BoxDecoration(
+                                  color: currentTheme.secondaryColor
+                                      .withOpacity(0.2),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Text(
+                                  '💡',
+                                  style: TextStyle(fontSize: 30),
+                                ),
                               ),
-                              const SizedBox(width: 5),
-                              Text(
-                                _points.isNotEmpty ? '$_points' : '---',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black,
+                              const SizedBox(width: 15),
+                              Expanded(
+                                child: Text(
+                                  _currentFoxPhrase,
+                                  style: (currentFont.style ??
+                                          const TextStyle())
+                                      .copyWith(
+                                        fontSize: 14,
+                                        color: currentTheme.textColor,
+                                      ),
                                 ),
                               ),
                             ],
                           ),
                         ),
                       ),
-                      const SizedBox(width: 10),
-                      IconButton(
-                        icon: Icon(Icons.logout, color: AppColors.lavender),
-                        onPressed: () {
-                          AuthService.logout();
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const LoginScreen(),
-                            ),
-                          );
-                        },
-                      ),
                     ],
                   ),
                 ],
               ),
-
-              const SizedBox(height: 25),
-
-              // Chat Card
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.lavender.withOpacity(0.1),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      today,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: AppColors.textSecondary,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 15),
-
-                    // Messages
-                    if (_messages.isEmpty)
-                      Container(
-                        padding: const EdgeInsets.all(15),
-                        decoration: BoxDecoration(
-                          color: AppColors.lavenderLight,
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        child: Text(
-                          _currentUserId != null
-                              ? '¡Hola! Soy Mr. Zorro, tu compañero emocional. ¿Cómo te sientes hoy? Puedes contarme lo que quieras.'
-                              : 'Cargando...',
-                          style: TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: 15,
-                          ),
-                        ),
-                      )
-                    else
-                      ...(_messages.reversed
-                          .take(3)
-                          .toList()
-                          .reversed
-                          .map(
-                            (msg) => Padding(
-                              padding: const EdgeInsets.only(bottom: 10),
-                              child: Container(
-                                padding: const EdgeInsets.all(15),
-                                decoration: BoxDecoration(
-                                  color:
-                                      msg['role'] == 'user'
-                                          ? AppColors.lavender.withOpacity(0.2)
-                                          : AppColors.lavenderLight,
-                                  borderRadius: BorderRadius.circular(15),
-                                ),
-                                child: Text(
-                                  msg['content']!,
-                                  style: TextStyle(
-                                    color: AppColors.textPrimary,
-                                    fontSize: 15,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          )),
-
-                    const SizedBox(height: 15),
-
-                    // Input field
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _chatController,
-                            enabled: !_isLoading && _currentUserId != null,
-                            maxLines: null,
-                            textCapitalization: TextCapitalization.sentences,
-                            decoration: InputDecoration(
-                              hintText:
-                                  _currentUserId != null
-                                      ? 'Cuéntame cómo te sientes...'
-                                      : 'Cargando...',
-                              hintStyle: TextStyle(color: AppColors.textLight),
-                              filled: true,
-                              fillColor:
-                                  _isLoading
-                                      ? AppColors.background.withOpacity(0.5)
-                                      : AppColors.background,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(15),
-                                borderSide: BorderSide.none,
-                              ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 15,
-                                vertical: 12,
-                              ),
-                            ),
-                            onSubmitted: (_) => _sendMessage(),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        IconButton(
-                          onPressed: _isLoading ? null : _sendMessage,
-                          icon:
-                              _isLoading
-                                  ? SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: AppColors.lavender,
-                                    ),
-                                  )
-                                  : Icon(Icons.send, color: AppColors.lavender),
-                          style: IconButton.styleFrom(
-                            backgroundColor:
-                                _isLoading
-                                    ? AppColors.lavenderLight.withOpacity(0.5)
-                                    : AppColors.lavenderLight,
-                            padding: const EdgeInsets.all(12),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 25),
-
-              // Emotion Buttons
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                mainAxisSize: MainAxisSize.max,
-                children: [
-                  Expanded(
-                    child: _EmotionButton(
-                      emoji: '😊',
-                      label: 'Estoy Feliz',
-                      onTap: () => _registerEmotion('happy'),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _EmotionButton(
-                      emoji: '😢',
-                      label: 'Estoy Triste',
-                      onTap: () => _registerEmotion('sad'),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _EmotionButton(
-                      emoji: '🤔',
-                      label: 'Otro',
-                      onTap: () => _showMoreEmotions(),
-                    ),
-                  ),
-                ],
-              ),
-
-              // 🦊 ========================================
-              // 🦊 ZORRITO + FOX CARD INTEGRADOS
-              // 🦊 ========================================
-              const SizedBox(height: 10),
-
-              Column(
-                children: [
-                  // Zorrito (arriba)
-                  Image.asset(
-                    'assets/images/hola.png',
-                    width: double.infinity,
-                    height: 250, // 🎯 AJUSTA LA ALTURA DEL ZORRITO AQUÍ
-                    fit: BoxFit.contain,
-                  ),
-                  const SizedBox(height: 10),
-                  // 🎯 AJUSTA EL ESPACIO ENTRE EL ZORRITO Y LA CARD AQUÍ
-                  // Fox Card (abajo)
-                  GestureDetector(
-                    onTap: _refreshPhrases,
-                    child: Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.lavender.withOpacity(0.1),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(15),
-                            decoration: BoxDecoration(
-                              color: AppColors.cream,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Text(
-                              '💡',
-                              style: TextStyle(fontSize: 30),
-                            ),
-                          ),
-                          const SizedBox(width: 15),
-                          Expanded(
-                            child: Text(
-                              _currentFoxPhrase,
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: AppColors.textPrimary,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -702,29 +765,39 @@ class _EmotionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
-        decoration: BoxDecoration(
-          color: AppColors.lavenderLight,
-          borderRadius: BorderRadius.circular(15),
-        ),
-        child: Column(
-          children: [
-            Text(emoji, style: const TextStyle(fontSize: 28)),
-            const SizedBox(height: 5),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w500,
-              ),
+    final themeService = ThemeService();
+
+    return ListenableBuilder(
+      listenable: themeService,
+      builder: (context, child) {
+        final currentTheme = themeService.currentTheme;
+        final currentFont = themeService.currentFont;
+
+        return GestureDetector(
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
+            decoration: BoxDecoration(
+              color: currentTheme.primaryColor.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(15),
             ),
-          ],
-        ),
-      ),
+            child: Column(
+              children: [
+                Text(emoji, style: const TextStyle(fontSize: 28)),
+                const SizedBox(height: 5),
+                Text(
+                  label,
+                  style: (currentFont.style ?? const TextStyle()).copyWith(
+                    fontSize: 11,
+                    color: currentTheme.textColor,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../config/api_config.dart';
 import 'package:http/http.dart' as http;
+import '../services/theme_service.dart';
+import '../models/app_font.dart';
 
 class ApiTestScreen extends StatefulWidget {
   const ApiTestScreen({super.key});
@@ -53,62 +55,107 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('API Connection Test'),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'API Configuration:',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            Text('Base URL: ${ApiConfig.baseUrl}'),
-            Text('Login URL: ${ApiConfig.loginUrl}'),
-            Text('Signup URL: ${ApiConfig.signupUrl}'),
-            const SizedBox(height: 30),
+    final themeService = ThemeService();
 
-            ElevatedButton(
-              onPressed: _isLoading ? null : _testApiConnection,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                foregroundColor: Colors.white,
-                minimumSize: const Size(double.infinity, 50),
+    return ListenableBuilder(
+      listenable: themeService,
+      builder: (context, child) {
+        final currentFont = themeService.currentFont;
+        final currentTheme = themeService.currentTheme;
+
+        return Scaffold(
+          backgroundColor: currentTheme.backgroundColor,
+          appBar: AppBar(
+            title: Text(
+              'API Connection Test',
+              style: (currentFont.style ?? const TextStyle()).copyWith(
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
               ),
-              child:
-                  _isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text('Test API Connection'),
             ),
-
-            const SizedBox(height: 20),
-
-            Expanded(
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(15),
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey[300]!),
-                ),
-                child: SingleChildScrollView(
-                  child: Text(
-                    _testResult,
-                    style: const TextStyle(fontSize: 14),
+            backgroundColor: currentTheme.primaryColor,
+            foregroundColor: Colors.white,
+          ),
+          body: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'API Configuration:',
+                  style: (currentFont.style ?? const TextStyle()).copyWith(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: currentTheme.textColor,
                   ),
                 ),
-              ),
+                const SizedBox(height: 10),
+                Text(
+                  'Base URL: ${ApiConfig.baseUrl}',
+                  style: (currentFont.style ?? const TextStyle()).copyWith(
+                    color: currentTheme.textColor,
+                  ),
+                ),
+                Text(
+                  'Login URL: ${ApiConfig.loginUrl}',
+                  style: (currentFont.style ?? const TextStyle()).copyWith(
+                    color: currentTheme.textColor,
+                  ),
+                ),
+                Text(
+                  'Signup URL: ${ApiConfig.signupUrl}',
+                  style: (currentFont.style ?? const TextStyle()).copyWith(
+                    color: currentTheme.textColor,
+                  ),
+                ),
+                const SizedBox(height: 30),
+
+                ElevatedButton(
+                  onPressed: _isLoading ? null : _testApiConnection,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: currentTheme.primaryColor,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(double.infinity, 50),
+                  ),
+                  child:
+                      _isLoading
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : Text(
+                            'Test API Connection',
+                            style: (currentFont.style ?? const TextStyle()),
+                          ),
+                ),
+
+                const SizedBox(height: 20),
+
+                Expanded(
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(15),
+                    decoration: BoxDecoration(
+                      color: currentTheme.cardColor,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: currentTheme.textColor.withOpacity(0.1),
+                      ),
+                    ),
+                    child: SingleChildScrollView(
+                      child: Text(
+                        _testResult,
+                        style: (currentFont.style ?? const TextStyle())
+                            .copyWith(
+                              fontSize: 14,
+                              color: currentTheme.textColor,
+                            ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

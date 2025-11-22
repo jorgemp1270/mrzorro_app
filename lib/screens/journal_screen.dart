@@ -6,6 +6,7 @@ import 'package:mrzorro_app/screens/camera_screen.dart';
 import 'package:mrzorro_app/screens/login_screen.dart';
 import 'package:mrzorro_app/services/api_service.dart';
 import 'package:mrzorro_app/services/auth_service.dart';
+import 'package:mrzorro_app/services/theme_service.dart';
 import '../utils/colors.dart';
 import '../utils/constants.dart';
 
@@ -75,7 +76,7 @@ class _JournalScreenState extends State<JournalScreen> {
     if (_currentUserId == null) return;
 
     try {
-      final result = await ApiService.getUserPoints(_currentUserId!);
+      final result = await ApiService.getUserPurchases(_currentUserId!);
       if (result['success'] == true && mounted) {
         setState(() {
           _points = result['points'] ?? 0;
@@ -241,6 +242,11 @@ class _JournalScreenState extends State<JournalScreen> {
         ),
       );
 
+      if (authenticated) {
+        setState(() {
+          _entriesLocked = false;
+        });
+      }
       return authenticated;
     } catch (e) {
       return await _showPasswordDialog();
@@ -272,9 +278,11 @@ class _JournalScreenState extends State<JournalScreen> {
               ),
               ElevatedButton(
                 onPressed: () async {
-                  // Aquí validarías la contraseña con tu backend
                   if (controller.text == password) {
                     // Contraseña correcta
+                    setState(() {
+                      _entriesLocked = false;
+                    });
                     return Navigator.pop(context, true);
                   } else {
                     // Mostrar error
@@ -305,8 +313,9 @@ class _JournalScreenState extends State<JournalScreen> {
 
     // Abrir entrada del diario
     if (!mounted) return;
-
-    _entriesLocked = false;
+    setState(() {
+      _entriesLocked = false;
+    });
     final result = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
@@ -360,306 +369,331 @@ class _JournalScreenState extends State<JournalScreen> {
         AppConstants.journalPrompts[random.nextInt(
           AppConstants.journalPrompts.length,
         )];
+    final themeService = ThemeService();
 
-    return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 250, 244, 245),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: Text(
-          'Journal',
-          style: TextStyle(
-            color: AppColors.lavender,
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        actions: [
-          GestureDetector(
-            onTap: () {
-              // Refresh points when tapped
-              _getUserPoints();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Puntos actualizados: $_points'),
-                  duration: const Duration(seconds: 2),
-                ),
-              );
-            },
-            child: Container(
-              margin: const EdgeInsets.only(right: 10),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.apple, color: Colors.red[700], size: 20),
-                  const SizedBox(width: 5),
-                  Text(
-                    _points > 0 ? '$_points' : '---',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
-                  ),
-                ],
+    return ListenableBuilder(
+      listenable: themeService,
+      builder: (context, child) {
+        final currentTheme = themeService.currentTheme;
+        final currentFont = themeService.currentFont;
+
+        return Scaffold(
+          backgroundColor: currentTheme.backgroundColor,
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            title: Text(
+              'Journal',
+              style: (currentFont.style ?? const TextStyle()).copyWith(
+                color: currentTheme.primaryColor,
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
               ),
             ),
-          ),
-          IconButton(
-            icon: Icon(Icons.logout, color: AppColors.lavender),
-            onPressed: () {
-              AuthService.logout();
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const LoginScreen()),
-              );
-            },
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final result = await Navigator.push<bool>(
-            context,
-            MaterialPageRoute(builder: (_) => const CameraScreen()),
-          );
-
-          // Refresh data if an entry was created from camera
-          if (result == true) {
-            _refreshAllData();
-            if (!mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Nueva entrada creada desde cámara'),
-                duration: Duration(seconds: 2),
-              ),
-            );
-          }
-        },
-        backgroundColor: AppColors.lavender,
-        child: const Icon(
-          Icons.camera_alt_outlined,
-          color: AppColors.textPrimary,
-        ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Stats Row
-            Row(
-              children: [
-                Expanded(
-                  child: _StatCard(
-                    value: '$_entriesThisYear',
-                    label: 'Entradas Este Año',
-                    color: AppColors.lavenderLight,
-                  ),
-                ),
-                const SizedBox(width: 15),
-                Expanded(
-                  child: _StatCard(
-                    value: '$_currentStreak',
-                    label: 'Días de Racha',
-                    color: AppColors.peach.withOpacity(0.3),
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 20),
-
-            SizedBox(
-              width: double.infinity,
-              child: _StatCard(
-                value: '$_bestStreak',
-                label: 'Mejor Racha',
-                color: AppColors.cream,
-              ),
-            ),
-
-            const SizedBox(height: 20),
-            Text(
-              "Crea un recuerdo para hoy",
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 20),
-            // Today's Prompt Card
-            GestureDetector(
-              onTap: () => _createNewEntry(prompt: todayPrompt),
-              child: Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.lavender.withOpacity(0.1),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
+            actions: [
+              GestureDetector(
+                onTap: () {
+                  // Refresh points when tapped
+                  _getUserPoints();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Puntos actualizados: $_points'),
+                      duration: const Duration(seconds: 2),
                     ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            DateFormat(
-                              'EEEE, d \'de\' MMMM',
-                              'es',
-                            ).format(DateTime.now()),
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: AppColors.textSecondary,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            todayPrompt,
-                            style: TextStyle(
-                              fontSize: 15,
-                              color: AppColors.textPrimary,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // IconButton(
-                    //   onPressed: () => _createNewEntry(prompt: todayPrompt),
-                    //   icon: Icon(Icons.refresh, color: AppColors.lavender),
-                    // ),
-                    IconButton(
-                      onPressed: () => _createNewEntry(prompt: todayPrompt),
-                      icon: Icon(Icons.edit, color: AppColors.lavender),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 25),
-
-            // Emotional Valence Chart
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.lavender.withOpacity(0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
+                  );
+                },
+                child: Container(
+                  margin: const EdgeInsets.only(right: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
                   ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Valencia emocional del mes',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
+                  decoration: BoxDecoration(
+                    color: currentTheme.cardColor,
+                    borderRadius: BorderRadius.circular(20),
                   ),
-                  const SizedBox(height: 15),
-                  Row(
+                  child: Row(
                     children: [
-                      // Sad emoji (left)
-                      const Text('😢', style: TextStyle(fontSize: 24)),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Stack(
-                          children: [
-                            // Background gradient bar
-                            Container(
-                              height: 40,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    Colors.red.shade300,
-                                    Colors.orange.shade300,
-                                    Colors.yellow.shade300,
-                                    Colors.green.shade300,
-                                    Colors.blue.shade300,
-                                  ],
-                                ),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
+                      Icon(Icons.apple, color: Colors.red[700], size: 20),
+                      const SizedBox(width: 5),
+                      Text(
+                        _points > 0 ? '$_points' : '---',
+                        style: (currentFont.style ?? const TextStyle())
+                            .copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: currentTheme.textColor,
                             ),
-                            // Emotion indicator dot
-                            Positioned(
-                              left:
-                                  (_calculateCurrentMonthAverage() - 1) *
-                                  (MediaQuery.of(context).size.width - 140) /
-                                  9,
-                              top: 14,
-                              child: Container(
-                                width: 12,
-                                height: 12,
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: AppColors.lavender,
-                                    width: 2,
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.2),
-                                      blurRadius: 4,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
                       ),
-                      const SizedBox(width: 10),
-                      // Happy emoji (right)
-                      const Text('🦊', style: TextStyle(fontSize: 24)),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  // Average score display
-                  Center(
-                    child: Text(
-                      'Promedio: ${_calculateCurrentMonthAverage().toStringAsFixed(1)}/10',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: AppColors.textSecondary,
-                        fontWeight: FontWeight.w500,
+                ),
+              ),
+              IconButton(
+                icon: Icon(Icons.logout, color: currentTheme.primaryColor),
+                onPressed: () {
+                  AuthService.logout();
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const LoginScreen(),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+          floatingActionButton: FloatingActionButton(
+            onPressed: () async {
+              final result = await Navigator.push<bool>(
+                context,
+                MaterialPageRoute(builder: (_) => const CameraScreen()),
+              );
+
+              // Refresh data if an entry was created from camera
+              if (result == true) {
+                _refreshAllData();
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Nueva entrada creada desde cámara'),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              }
+            },
+            backgroundColor: currentTheme.primaryColor,
+            child: Icon(
+              Icons.camera_alt_outlined,
+              color: currentTheme.textColor,
+            ),
+          ),
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Stats Row
+                Row(
+                  children: [
+                    Expanded(
+                      child: _StatCard(
+                        value: '$_entriesThisYear',
+                        label: 'Entradas Este Año',
+                        color: currentTheme.primaryColor.withOpacity(0.2),
                       ),
                     ),
+                    const SizedBox(width: 15),
+                    Expanded(
+                      child: _StatCard(
+                        value: '$_currentStreak',
+                        label: 'Días de Racha',
+                        color: currentTheme.secondaryColor.withOpacity(0.3),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 20),
+
+                SizedBox(
+                  width: double.infinity,
+                  child: _StatCard(
+                    value: '$_bestStreak',
+                    label: 'Mejor Racha',
+                    color: currentTheme.secondaryColor.withOpacity(0.1),
                   ),
-                ],
-              ),
+                ),
+
+                const SizedBox(height: 20),
+                Text(
+                  "Crea un recuerdo para hoy",
+                  style: (currentFont.style ?? const TextStyle()).copyWith(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: currentTheme.textColor,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                // Today's Prompt Card
+                GestureDetector(
+                  onTap: () => _createNewEntry(prompt: todayPrompt),
+                  child: Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: currentTheme.cardColor,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: currentTheme.primaryColor.withOpacity(0.1),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                DateFormat(
+                                  'EEEE, d \'de\' MMMM',
+                                  'es',
+                                ).format(DateTime.now()),
+                                style: (currentFont.style ?? const TextStyle())
+                                    .copyWith(
+                                      fontSize: 13,
+                                      color: currentTheme.textColor.withOpacity(
+                                        0.6,
+                                      ),
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                todayPrompt,
+                                style: (currentFont.style ?? const TextStyle())
+                                    .copyWith(
+                                      fontSize: 15,
+                                      color: currentTheme.textColor,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // IconButton(
+                        //   onPressed: () => _createNewEntry(prompt: todayPrompt),
+                        //   icon: Icon(Icons.refresh, color: AppColors.lavender),
+                        // ),
+                        IconButton(
+                          onPressed: () => _createNewEntry(prompt: todayPrompt),
+                          icon: Icon(
+                            Icons.edit,
+                            color: currentTheme.primaryColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 25),
+
+                // Emotional Valence Chart
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: currentTheme.cardColor,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: currentTheme.primaryColor.withOpacity(0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Valencia emocional del mes',
+                        style: (currentFont.style ?? const TextStyle())
+                            .copyWith(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: currentTheme.textColor,
+                            ),
+                      ),
+                      const SizedBox(height: 15),
+                      Row(
+                        children: [
+                          // Sad emoji (left)
+                          const Text('😢', style: TextStyle(fontSize: 24)),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Stack(
+                              children: [
+                                // Background gradient bar
+                                Container(
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Colors.red.shade300,
+                                        Colors.orange.shade300,
+                                        Colors.yellow.shade300,
+                                        Colors.green.shade300,
+                                        Colors.blue.shade300,
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                ),
+                                // Emotion indicator dot
+                                Positioned(
+                                  left:
+                                      (_calculateCurrentMonthAverage() - 1) *
+                                      (MediaQuery.of(context).size.width -
+                                          140) /
+                                      9,
+                                  top: 14,
+                                  child: Container(
+                                    width: 12,
+                                    height: 12,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: AppColors.lavender,
+                                        width: 2,
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.2),
+                                          blurRadius: 4,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          // Happy emoji (right)
+                          const Text('🦊', style: TextStyle(fontSize: 24)),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      // Average score display
+                      Center(
+                        child: Text(
+                          'Promedio: ${_calculateCurrentMonthAverage().toStringAsFixed(1)}/10',
+                          style: (currentFont.style ?? const TextStyle())
+                              .copyWith(
+                                fontSize: 13,
+                                color: AppColors.textSecondary,
+                                fontWeight: FontWeight.w500,
+                              ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 25),
+
+                // Previous Entries by Month
+                ..._buildMonthlyEntries(),
+              ],
             ),
-
-            const SizedBox(height: 25),
-
-            // Previous Entries by Month
-            ..._buildMonthlyEntries(),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -682,6 +716,8 @@ class _JournalScreenState extends State<JournalScreen> {
   List<Widget> _buildMonthlyEntries() {
     final groupedEntries = _groupEntriesByMonth();
     final widgets = <Widget>[];
+    final currentFont = ThemeService().currentFont;
+    final currentTheme = ThemeService().currentTheme;
 
     // Sort months by date (newest first)
     final sortedMonths =
@@ -703,10 +739,10 @@ class _JournalScreenState extends State<JournalScreen> {
               Text(
                 monthName.substring(0, 1).toUpperCase() +
                     monthName.substring(1),
-                style: TextStyle(
+                style: (currentFont.style ?? const TextStyle()).copyWith(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+                  color: currentTheme.textColor,
                 ),
               ),
               Container(
@@ -715,15 +751,15 @@ class _JournalScreenState extends State<JournalScreen> {
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.lavender.withOpacity(0.1),
+                  color: currentTheme.primaryColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
                   year,
-                  style: TextStyle(
+                  style: (currentFont.style ?? const TextStyle()).copyWith(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+                    color: currentTheme.textColor,
                   ),
                 ),
               ),
@@ -742,11 +778,11 @@ class _JournalScreenState extends State<JournalScreen> {
               child: Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: currentTheme.cardColor,
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.lavender.withOpacity(0.1),
+                      color: currentTheme.primaryColor.withOpacity(0.1),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -761,22 +797,23 @@ class _JournalScreenState extends State<JournalScreen> {
                         Expanded(
                           child: Text(
                             entry['title'] ?? "Sin título",
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
-                            ),
+                            style: (currentFont.style ?? const TextStyle())
+                                .copyWith(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: currentTheme.textColor,
+                                ),
                           ),
                         ),
                         _entriesLocked
                             ? Icon(
                               Icons.lock,
-                              color: AppColors.lavender,
+                              color: currentTheme.primaryColor,
                               size: 20,
                             )
                             : Icon(
                               Icons.lock_open,
-                              color: AppColors.lavender,
+                              color: currentTheme.primaryColor,
                               size: 20,
                             ),
                       ],
@@ -786,7 +823,7 @@ class _JournalScreenState extends State<JournalScreen> {
                       entry['note'] ?? '',
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
+                      style: (currentFont.style ?? const TextStyle()).copyWith(
                         fontSize: 14,
                         color: AppColors.textSecondary,
                       ),
@@ -797,7 +834,7 @@ class _JournalScreenState extends State<JournalScreen> {
                         'd \'de\' MMMM',
                         'es',
                       ).format(DateTime.parse(entry['date'])),
-                      style: TextStyle(
+                      style: (currentFont.style ?? const TextStyle()).copyWith(
                         fontSize: 12,
                         color: AppColors.textSecondary,
                         fontWeight: FontWeight.w500,
@@ -834,30 +871,43 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        children: [
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
-            ),
+    final themeService = ThemeService();
+
+    return ListenableBuilder(
+      listenable: themeService,
+      builder: (context, child) {
+        final currentTheme = themeService.currentTheme;
+        final currentFont = themeService.currentFont;
+
+        return Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(20),
           ),
-          const SizedBox(height: 5),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+          child: Column(
+            children: [
+              Text(
+                value,
+                style: (currentFont.style ?? const TextStyle()).copyWith(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: currentTheme.textColor,
+                ),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                style: (currentFont.style ?? const TextStyle()).copyWith(
+                  fontSize: 12,
+                  color: currentTheme.textColor.withOpacity(0.6),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

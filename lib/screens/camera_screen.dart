@@ -2,9 +2,9 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import '../utils/colors.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
+import '../services/theme_service.dart';
 import 'journal_entry_screen.dart';
 import 'package:mrzorro_app/utils/file_utils.dart';
 
@@ -151,26 +151,42 @@ class _CameraScreenState extends State<CameraScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 250, 244, 245),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: Text(
-          'Camera',
-          style: TextStyle(
-            color: AppColors.lavender,
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
+    final themeService = ThemeService();
+
+    return ListenableBuilder(
+      listenable: themeService,
+      builder: (context, child) {
+        final currentTheme = themeService.currentTheme;
+        final currentFont = themeService.currentFont;
+
+        return Scaffold(
+          backgroundColor: currentTheme.backgroundColor,
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            title: Text(
+              'Camera',
+              style: (currentFont.style ?? const TextStyle()).copyWith(
+                color: currentTheme.primaryColor,
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
-        ),
-      ),
-      body:
-          _capturedImage == null ? _buildCameraPrompt() : _buildImagePreview(),
+          body:
+              _capturedImage == null
+                  ? _buildCameraPrompt()
+                  : _buildImagePreview(),
+        );
+      },
     );
   }
 
   Widget _buildCameraPrompt() {
+    final themeService = ThemeService();
+    final currentTheme = themeService.currentTheme;
+    final currentFont = themeService.currentFont;
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(40),
@@ -180,13 +196,13 @@ class _CameraScreenState extends State<CameraScreen> {
             Container(
               padding: const EdgeInsets.all(40),
               decoration: BoxDecoration(
-                color: AppColors.lavenderLight,
+                color: currentTheme.primaryColor.withOpacity(0.2),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.camera_alt,
                 size: 80,
-                color: AppColors.lavender,
+                color: currentTheme.primaryColor,
               ),
             ),
 
@@ -194,10 +210,10 @@ class _CameraScreenState extends State<CameraScreen> {
 
             Text(
               'Captura un momento',
-              style: TextStyle(
+              style: (currentFont.style ?? const TextStyle()).copyWith(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
+                color: currentTheme.textColor,
               ),
             ),
 
@@ -206,7 +222,10 @@ class _CameraScreenState extends State<CameraScreen> {
             Text(
               'Toma una foto y la analizaré para crear una entrada en tu diario',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
+              style: (currentFont.style ?? const TextStyle()).copyWith(
+                fontSize: 16,
+                color: currentTheme.textColor.withOpacity(0.6),
+              ),
             ),
 
             const SizedBox(height: 40),
@@ -217,12 +236,15 @@ class _CameraScreenState extends State<CameraScreen> {
               child: ElevatedButton.icon(
                 onPressed: _takePicture,
                 icon: const Icon(Icons.camera_alt),
-                label: const Text(
+                label: Text(
                   'Abrir Cámara',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                  style: (currentFont.style ?? const TextStyle()).copyWith(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.lavender,
+                  backgroundColor: currentTheme.primaryColor,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(28),
@@ -237,6 +259,10 @@ class _CameraScreenState extends State<CameraScreen> {
   }
 
   Widget _buildImagePreview() {
+    final themeService = ThemeService();
+    final currentTheme = themeService.currentTheme;
+    final currentFont = themeService.currentFont;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -258,11 +284,11 @@ class _CameraScreenState extends State<CameraScreen> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: currentTheme.cardColor,
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.lavender.withOpacity(0.1),
+                  color: currentTheme.primaryColor.withOpacity(0.1),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -273,14 +299,18 @@ class _CameraScreenState extends State<CameraScreen> {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.analytics, color: AppColors.lavender, size: 24),
+                    Icon(
+                      Icons.analytics,
+                      color: currentTheme.primaryColor,
+                      size: 24,
+                    ),
                     const SizedBox(width: 10),
                     Text(
                       'Análisis de Imagen',
-                      style: TextStyle(
+                      style: (currentFont.style ?? const TextStyle()).copyWith(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
+                        color: currentTheme.textColor,
                       ),
                     ),
                   ],
@@ -292,14 +322,17 @@ class _CameraScreenState extends State<CameraScreen> {
                   Center(
                     child: Column(
                       children: [
-                        CircularProgressIndicator(color: AppColors.lavender),
+                        CircularProgressIndicator(
+                          color: currentTheme.primaryColor,
+                        ),
                         const SizedBox(height: 15),
                         Text(
                           'Analizando imagen...',
-                          style: TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 14,
-                          ),
+                          style: (currentFont.style ?? const TextStyle())
+                              .copyWith(
+                                color: currentTheme.textColor.withOpacity(0.6),
+                                fontSize: 14,
+                              ),
                         ),
                       ],
                     ),
@@ -311,11 +344,12 @@ class _CameraScreenState extends State<CameraScreen> {
                       // Main description
                       Text(
                         _analysisResult!,
-                        style: TextStyle(
-                          fontSize: 15,
-                          color: AppColors.textPrimary,
-                          height: 1.5,
-                        ),
+                        style: (currentFont.style ?? const TextStyle())
+                            .copyWith(
+                              fontSize: 15,
+                              color: currentTheme.textColor,
+                              height: 1.5,
+                            ),
                       ),
 
                       // Show additional AI insights if available
@@ -326,7 +360,7 @@ class _CameraScreenState extends State<CameraScreen> {
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: AppColors.lavenderLight,
+                              color: currentTheme.primaryColor.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Column(
@@ -336,28 +370,32 @@ class _CameraScreenState extends State<CameraScreen> {
                                   children: [
                                     Icon(
                                       Icons.lightbulb,
-                                      color: AppColors.lavender,
+                                      color: currentTheme.primaryColor,
                                       size: 16,
                                     ),
                                     const SizedBox(width: 6),
                                     Text(
                                       'Recomendación',
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
-                                        color: AppColors.lavender,
-                                      ),
+                                      style: (currentFont.style ??
+                                              const TextStyle())
+                                          .copyWith(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w600,
+                                            color: currentTheme.primaryColor,
+                                          ),
                                     ),
                                   ],
                                 ),
                                 const SizedBox(height: 6),
                                 Text(
                                   _aiAnalysis!['recommendation'],
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    color: AppColors.textPrimary,
-                                    height: 1.4,
-                                  ),
+                                  style: (currentFont.style ??
+                                          const TextStyle())
+                                      .copyWith(
+                                        fontSize: 13,
+                                        color: currentTheme.textColor,
+                                        height: 1.4,
+                                      ),
                                 ),
                               ],
                             ),
@@ -370,7 +408,9 @@ class _CameraScreenState extends State<CameraScreen> {
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: AppColors.peach.withOpacity(0.1),
+                              color: currentTheme.secondaryColor.withOpacity(
+                                0.1,
+                              ),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Column(
@@ -380,28 +420,32 @@ class _CameraScreenState extends State<CameraScreen> {
                                   children: [
                                     Icon(
                                       Icons.star,
-                                      color: AppColors.peach,
+                                      color: currentTheme.secondaryColor,
                                       size: 16,
                                     ),
                                     const SizedBox(width: 6),
                                     Text(
                                       'Dato Interesante',
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
-                                        color: AppColors.peach,
-                                      ),
+                                      style: (currentFont.style ??
+                                              const TextStyle())
+                                          .copyWith(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w600,
+                                            color: currentTheme.secondaryColor,
+                                          ),
                                     ),
                                   ],
                                 ),
                                 const SizedBox(height: 6),
                                 Text(
                                   _aiAnalysis!['interesting_fact'],
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    color: AppColors.textPrimary,
-                                    height: 1.4,
-                                  ),
+                                  style: (currentFont.style ??
+                                          const TextStyle())
+                                      .copyWith(
+                                        fontSize: 13,
+                                        color: currentTheme.textColor,
+                                        height: 1.4,
+                                      ),
                                 ),
                               ],
                             ),
@@ -423,10 +467,13 @@ class _CameraScreenState extends State<CameraScreen> {
                 child: OutlinedButton.icon(
                   onPressed: _retakePicture,
                   icon: const Icon(Icons.refresh),
-                  label: const Text('Volver a tomar'),
+                  label: Text(
+                    'Volver a tomar',
+                    style: (currentFont.style ?? const TextStyle()),
+                  ),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.lavender,
-                    side: BorderSide(color: AppColors.lavender),
+                    foregroundColor: currentTheme.primaryColor,
+                    side: BorderSide(color: currentTheme.primaryColor),
                     padding: const EdgeInsets.symmetric(vertical: 15),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(25),
@@ -439,9 +486,12 @@ class _CameraScreenState extends State<CameraScreen> {
                 child: ElevatedButton.icon(
                   onPressed: _isAnalyzing ? null : _createJournalEntry,
                   icon: const Icon(Icons.check),
-                  label: const Text('Crear entrada'),
+                  label: Text(
+                    'Crear entrada',
+                    style: (currentFont.style ?? const TextStyle()),
+                  ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.lavender,
+                    backgroundColor: currentTheme.primaryColor,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 15),
                     shape: RoundedRectangleBorder(
