@@ -25,17 +25,17 @@ class ThemeService extends ChangeNotifier {
       price: 0,
       style: null, // Uses system default
     ),
-    AppFont(id: 'lato', name: 'Lato', price: 50, style: GoogleFonts.lato()),
+    AppFont(id: 'lato', name: 'Lato', price: 20, style: GoogleFonts.lato()),
     AppFont(
-      id: 'opensans',
-      name: 'Open Sans',
-      price: 50,
-      style: GoogleFonts.openSans(),
+      id: 'fredoka',
+      name: 'Fredoka',
+      price: 30,
+      style: GoogleFonts.fredoka(),
     ),
     AppFont(
       id: 'montserrat',
       name: 'Montserrat',
-      price: 60,
+      price: 30,
       style: GoogleFonts.montserrat(),
     ),
     AppFont(
@@ -47,19 +47,19 @@ class ThemeService extends ChangeNotifier {
     AppFont(
       id: 'raleway',
       name: 'Raleway',
-      price: 70,
+      price: 40,
       style: GoogleFonts.raleway(),
     ),
     AppFont(
       id: 'merriweather',
       name: 'Merriweather',
-      price: 80,
+      price: 30,
       style: GoogleFonts.merriweather(),
     ),
     AppFont(
       id: 'playfair',
       name: 'Playfair Display',
-      price: 80,
+      price: 30,
       style: GoogleFonts.playfairDisplay(),
     ),
   ];
@@ -90,7 +90,7 @@ class ThemeService extends ChangeNotifier {
     AppTheme(
       id: 'fox',
       name: 'Mr. Zorro',
-      price: 50,
+      price: 100,
       primaryColor: AppColors.foxOrange,
       secondaryColor: AppColors.foxBorder,
       backgroundColor: Colors.white,
@@ -100,7 +100,7 @@ class ThemeService extends ChangeNotifier {
     AppTheme(
       id: 'ocean',
       name: 'Océano',
-      price: 80,
+      price: 30,
       primaryColor: Color(0xFF4FC3F7),
       secondaryColor: Color(0xFF0288D1),
       backgroundColor: Color(0xFFE1F5FE),
@@ -110,7 +110,7 @@ class ThemeService extends ChangeNotifier {
     AppTheme(
       id: 'forest',
       name: 'Bosque',
-      price: 100,
+      price: 30,
       primaryColor: Color(0xFF66BB6A),
       secondaryColor: Color(0xFF388E3C),
       backgroundColor: Color(0xFFE8F5E9),
@@ -120,7 +120,7 @@ class ThemeService extends ChangeNotifier {
     AppTheme(
       id: 'sunset',
       name: 'Atardecer',
-      price: 120,
+      price: 40,
       primaryColor: Color(0xFFFF7043),
       secondaryColor: Color(0xFFD84315),
       backgroundColor: Color(0xFFFFF3E0),
@@ -130,7 +130,7 @@ class ThemeService extends ChangeNotifier {
     AppTheme(
       id: 'galaxy',
       name: 'Galaxia',
-      price: 150,
+      price: 10,
       primaryColor: Color(0xFF9C27B0),
       secondaryColor: Color(0xFF7B1FA2),
       backgroundColor: Color(0xFF311B92),

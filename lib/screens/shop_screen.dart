@@ -132,7 +132,7 @@ class _ShopScreenState extends State<ShopScreen> {
               headerSliverBuilder: (context, innerBoxIsScrolled) {
                 return [
                   SliverAppBar(
-                    expandedHeight: 340.0,
+                    expandedHeight: 320.0,
                     floating: false,
                     pinned: true,
                     backgroundColor: currentTheme.backgroundColor,
@@ -219,7 +219,7 @@ class _ShopScreenState extends State<ShopScreen> {
                           top: 120,
                           left: 20,
                           right: 20,
-                          bottom: 60,
+                          bottom: 70,
                         ),
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
@@ -331,7 +331,13 @@ class _ShopScreenState extends State<ShopScreen> {
                       indicatorColor: currentTheme.primaryColor,
                       labelStyle: (currentFont.style ?? const TextStyle())
                           .copyWith(fontWeight: FontWeight.bold),
-                      tabs: const [Tab(text: 'Temas'), Tab(text: 'Fuentes')],
+                      tabs: const [
+                        Tab(text: 'Temas', icon: Icon(Icons.brush_outlined)),
+                        Tab(
+                          text: 'Fuentes',
+                          icon: Icon(Icons.font_download_outlined),
+                        ),
+                      ],
                     ),
                   ),
                 ];
