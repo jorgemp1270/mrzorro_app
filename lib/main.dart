@@ -17,11 +17,11 @@ void main() async {
   // Initialize ThemeService
   await ThemeService().init();
 
-  runApp(const SoulCareApp());
+  runApp(const MrZorroApp());
 }
 
-class SoulCareApp extends StatelessWidget {
-  const SoulCareApp({super.key});
+class MrZorroApp extends StatelessWidget {
+  const MrZorroApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -118,7 +118,7 @@ class _InitialScreenState extends State<InitialScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // Aquí puedes poner un loading o el logo
-            Image.asset('assets/images/fox.png', width: 150, height: 150),
+            Image.asset('assets/icon/icon.png', width: 150, height: 150),
             const SizedBox(height: 24),
             const CircularProgressIndicator(color: AppColors.lavender),
           ],
