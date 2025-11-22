@@ -55,17 +55,17 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                 BottomNavigationBarItem(
                   icon: Icon(Icons.home_outlined),
                   activeIcon: Icon(Icons.home),
-                  label: 'Home',
+                  label: 'Inicio',
                 ),
                 BottomNavigationBarItem(
                   icon: Icon(Icons.book_outlined),
                   activeIcon: Icon(Icons.book),
-                  label: 'Journal',
+                  label: 'Diario',
                 ),
                 BottomNavigationBarItem(
                   icon: Icon(Icons.shopping_bag_outlined),
                   activeIcon: Icon(Icons.shopping_bag),
-                  label: 'Shop',
+                  label: 'Tienda',
                 ),
               ],
             ),
@@ -685,7 +685,7 @@ class _HomeTabState extends State<HomeTab> {
                     children: [
                       // Zorrito (arriba)
                       Image.asset(
-                        'assets/images/hola.png',
+                        'assets/images/fox-hola.png',
                         width: double.infinity,
                         height: 250, // 🎯 AJUSTA LA ALTURA DEL ZORRITO AQUÍ
                         fit: BoxFit.contain,

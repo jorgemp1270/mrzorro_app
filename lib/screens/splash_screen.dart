@@ -27,7 +27,7 @@ class SplashScreen extends StatelessWidget {
                     Expanded(
                       flex: 7,
                       child: Image.asset(
-                        'assets/images/fox.png',
+                        'assets/images/fox-hola.png',
                         fit: BoxFit.contain,
                       ),
                     ),

@@ -54,33 +54,26 @@ class _LoginScreenState extends State<LoginScreen>
 
         return Scaffold(
           backgroundColor: currentTheme.backgroundColor,
-          body: SafeArea(
-            child: Column(
-              children: [
-                // -----------------------------------------------------
-                //                    IMAGEN SUPERIOR
-                // -----------------------------------------------------
-                Transform.translate(
-                  offset: const Offset(
-                    0,
-                    -65,
-                  ), //  ←← AJUSTA AQUÍ: valor negativo = la imagen sube más
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: imageHeight,
-                    child: Stack(
+          body: NestedScrollView(
+            headerSliverBuilder: (context, innerBoxIsScrolled) {
+              return [
+                SliverAppBar(
+                  expandedHeight: imageHeight,
+                  floating: false,
+                  pinned: true,
+                  backgroundColor: currentTheme.backgroundColor,
+                  elevation: 0,
+                  flexibleSpace: FlexibleSpaceBar(
+                    background: Stack(
                       children: [
-                        ClipRect(
-                          child: SizedBox(
-                            width: double.infinity,
-                            height: imageHeight,
-                            child: Image.asset(
-                              'assets/images/fox.png',
-                              fit: BoxFit.cover,
-                            ),
+                        SizedBox(
+                          width: double.infinity,
+                          height: double.infinity,
+                          child: Image.asset(
+                            'assets/images/fox.png',
+                            fit: BoxFit.cover,
                           ),
                         ),
-
                         // DIFUMINADO inferior suave
                         Positioned.fill(
                           child: Align(
@@ -104,88 +97,69 @@ class _LoginScreenState extends State<LoginScreen>
                       ],
                     ),
                   ),
-                ),
-
-                // -----------------------------------------------------
-                //          CONTENEDOR PARA SWITCH + CONTENIDO
-                // -----------------------------------------------------
-                Expanded(
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 0,
-                    ),
-                    child: Column(
-                      children: [
-                        // -----------------------------------------------------
-                        //               SWITCH LOGIN / SIGN UP
-                        // -----------------------------------------------------
-                        Container(
-                          height: 55,
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: currentTheme.primaryColor.withOpacity(0.25),
-                            borderRadius: BorderRadius.circular(40),
-                          ),
-                          child: Stack(
-                            children: [
-                              // Indicador de fondo animado (switch)
-                              AnimatedAlign(
-                                duration: const Duration(milliseconds: 230),
-                                alignment:
-                                    _tabController.index == 0
-                                        ? Alignment.centerLeft
-                                        : Alignment.centerRight,
-                                child: Container(
-                                  width:
-                                      (MediaQuery.of(context).size.width - 64) /
-                                      2,
-                                  decoration: BoxDecoration(
-                                    color: currentTheme.primaryColor,
-                                    borderRadius: BorderRadius.circular(30),
+                  bottom: PreferredSize(
+                    preferredSize: const Size.fromHeight(80),
+                    child: Container(
+                      color: currentTheme.backgroundColor,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 12,
+                      ),
+                      child: Container(
+                        height: 55,
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: currentTheme.primaryColor.withOpacity(0.25),
+                          borderRadius: BorderRadius.circular(40),
+                        ),
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            return Stack(
+                              children: [
+                                AnimatedAlign(
+                                  duration: const Duration(milliseconds: 230),
+                                  alignment:
+                                      _tabController.index == 0
+                                          ? Alignment.centerLeft
+                                          : Alignment.centerRight,
+                                  child: Container(
+                                    width: constraints.maxWidth / 2,
+                                    decoration: BoxDecoration(
+                                      color: currentTheme.primaryColor,
+                                      borderRadius: BorderRadius.circular(30),
+                                    ),
                                   ),
                                 ),
-                              ),
-
-                              // TabBar sin bordes ni indicadores
-                              TabBar(
-                                controller: _tabController,
-                                indicatorColor: Colors.transparent,
-                                dividerColor: Colors.transparent,
-                                labelColor: Colors.white,
-                                unselectedLabelColor: currentTheme.textColor,
-                                labelStyle: (currentFont.style ??
-                                        const TextStyle())
-                                    .copyWith(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                tabs: const [
-                                  Tab(text: "Login"),
-                                  Tab(text: "Sign up"),
-                                ],
-                              ),
-                            ],
-                          ),
+                                TabBar(
+                                  controller: _tabController,
+                                  indicatorColor: Colors.transparent,
+                                  dividerColor: Colors.transparent,
+                                  labelColor: Colors.white,
+                                  unselectedLabelColor: currentTheme.textColor,
+                                  labelStyle: (currentFont.style ??
+                                          const TextStyle())
+                                      .copyWith(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                  tabs: const [
+                                    Tab(text: "Login"),
+                                    Tab(text: "Sign up"),
+                                  ],
+                                ),
+                              ],
+                            );
+                          },
                         ),
-
-                        const SizedBox(height: 0),
-
-                        // -----------------------------------------------------
-                        //                       CONTENIDO
-                        // -----------------------------------------------------
-                        Expanded(
-                          child: TabBarView(
-                            controller: _tabController,
-                            children: const [LoginTab(), SignUpTab()],
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
-              ],
+              ];
+            },
+            body: TabBarView(
+              controller: _tabController,
+              children: const [LoginTab(), SignUpTab()],
             ),
           ),
         );

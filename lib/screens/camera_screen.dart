@@ -165,7 +165,7 @@ class _CameraScreenState extends State<CameraScreen> {
             backgroundColor: Colors.transparent,
             elevation: 0,
             title: Text(
-              'Camera',
+              'Cámara',
               style: (currentFont.style ?? const TextStyle()).copyWith(
                 color: currentTheme.primaryColor,
                 fontSize: 28,

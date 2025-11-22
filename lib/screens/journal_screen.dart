@@ -29,6 +29,7 @@ class _JournalScreenState extends State<JournalScreen> {
   int _bestStreak = 0;
   int _points = 0;
   bool _entriesLocked = true;
+  bool _isFabExpanded = false; // New state variable for FAB expansion
 
   @override
   void initState() {
@@ -442,30 +443,96 @@ class _JournalScreenState extends State<JournalScreen> {
               ),
             ],
           ),
-          floatingActionButton: FloatingActionButton(
-            onPressed: () async {
-              final result = await Navigator.push<bool>(
-                context,
-                MaterialPageRoute(builder: (_) => const CameraScreen()),
-              );
-
-              // Refresh data if an entry was created from camera
-              if (result == true) {
-                _refreshAllData();
-                if (!mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Nueva entrada creada desde cámara'),
-                    duration: Duration(seconds: 2),
+          floatingActionButton: Column(
+            mainAxisSize: MainAxisSize.min,
+            spacing: 10,
+            children: [
+              if (_isFabExpanded) ...[
+                FloatingActionButton(
+                  heroTag: 'fox_fab',
+                  shape: const CircleBorder(),
+                  backgroundColor: currentTheme.primaryColor,
+                  onPressed: () {},
+                  child: Text(
+                    '🦊',
+                    style: TextStyle(
+                      fontSize: 28,
+                      color: currentTheme.textColor,
+                    ),
                   ),
-                );
-              }
-            },
-            backgroundColor: currentTheme.primaryColor,
-            child: Icon(
-              Icons.camera_alt_outlined,
-              color: currentTheme.textColor,
-            ),
+                ),
+
+                FloatingActionButton(
+                  tooltip: "Analizar imagen desde cámara",
+                  heroTag: 'camera_fab',
+                  onPressed: () async {
+                    final result = await Navigator.push<bool>(
+                      context,
+                      MaterialPageRoute(builder: (_) => const CameraScreen()),
+                    );
+
+                    // Refresh data if an entry was created from camera
+                    if (result == true) {
+                      _refreshAllData();
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Nueva entrada creada desde cámara'),
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                  },
+                  backgroundColor: currentTheme.primaryColor,
+                  child: Icon(
+                    Icons.camera_alt_outlined,
+                    color: currentTheme.textColor,
+                  ),
+                ),
+                FloatingActionButton(
+                  tooltip: "Crear nueva entrada",
+                  heroTag: 'edit_fab',
+                  onPressed: () async {
+                    final result = await Navigator.push<bool>(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const JournalEntryScreen(),
+                      ),
+                    );
+
+                    // Refresh data if an entry was created from camera
+                    if (result == true) {
+                      _refreshAllData();
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Nueva entrada creada'),
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                  },
+                  backgroundColor: currentTheme.primaryColor,
+                  child: Icon(
+                    Icons.edit_outlined,
+                    color: currentTheme.textColor,
+                  ),
+                ),
+              ],
+              FloatingActionButton(
+                heroTag: 'expand_fab',
+                onPressed: () {
+                  setState(() {
+                    _isFabExpanded = !_isFabExpanded;
+                  });
+                },
+                backgroundColor: currentTheme.primaryColor,
+                child: Icon(
+                  _isFabExpanded ? Icons.close : Icons.add,
+                  color: currentTheme.textColor,
+                ),
+              ),
+            ],
           ),
           body: SingleChildScrollView(
             padding: const EdgeInsets.all(20),
