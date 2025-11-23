@@ -51,6 +51,7 @@ class _CameraScreenState extends State<CameraScreen> {
         // Guardar en memoria interna directamente
         final savedFile = await FileUtils.saveImageToInternalStorage(
           originalFile,
+          DateTime.now(),
         );
 
         setState(() {
@@ -113,6 +114,7 @@ class _CameraScreenState extends State<CameraScreen> {
     // Guardar imagen en memoria interna
     final savedImage = await FileUtils.saveImageToInternalStorage(
       _capturedImage!,
+      DateTime.now(),
     );
 
     // Use the AI-predicted label as the title, or fallback to default

@@ -103,9 +103,19 @@ class _JournalEntryScreenState extends State<JournalEntryScreen> {
       if (image != null) {
         final originalFile = File(image.path);
 
+        DateTime imageDate = DateTime.now();
+        if (widget.entry != null && widget.entry!['date'] != null) {
+          try {
+            imageDate = DateTime.parse(widget.entry!['date']);
+          } catch (e) {
+            print('Error parsing date: $e');
+          }
+        }
+
         // Guardar en memoria interna
         final savedImage = await FileUtils.saveImageToInternalStorage(
           originalFile,
+          imageDate,
         );
 
         setState(() {
@@ -172,9 +182,19 @@ class _JournalEntryScreenState extends State<JournalEntryScreen> {
     try {
       String? imageBase64;
       if (_images.isNotEmpty) {
+        DateTime imageDate = DateTime.now();
+        if (widget.entry != null && widget.entry!['date'] != null) {
+          try {
+            imageDate = DateTime.parse(widget.entry!['date']);
+          } catch (e) {
+            print('Error parsing date: $e');
+          }
+        }
+
         // Save image to internal storage with date-based filename
         final savedImage = await FileUtils.saveImageToInternalStorage(
           _images.first,
+          imageDate,
         );
         // Convert to base64 for API
         final bytes = await savedImage.readAsBytes();

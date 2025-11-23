@@ -3,7 +3,10 @@ import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 
 class FileUtils {
-  static Future<File> saveImageToInternalStorage(File imageFile) async {
+  static Future<File> saveImageToInternalStorage(
+    File imageFile,
+    DateTime date,
+  ) async {
     // Tomar directorio interno
     final directory = await getApplicationDocumentsDirectory();
 
@@ -15,9 +18,9 @@ class FileUtils {
     }
 
     // Crear nombre YYYY-MM-DD
-    final date = DateFormat('yyyy-MM-dd_HH-mm-ss').format(DateTime.now());
+    final dateStr = DateFormat('yyyy-MM-dd_HH-mm-ss').format(date);
     final extension = imageFile.path.split('.').last;
-    final newPath = '$folderPath/$date.$extension';
+    final newPath = '$folderPath/$dateStr.$extension';
 
     // Copiar archivo a memoria interna
     return imageFile.copy(newPath);
