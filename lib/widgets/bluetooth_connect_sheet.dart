@@ -77,7 +77,7 @@ class _BluetoothConnectSheetState extends State<BluetoothConnectSheet> {
         // Start scanning for the specific service UUID
         await FlutterBluePlus.startScan(
           timeout: const Duration(seconds: 15),
-          withServices: [_serviceUuid], 
+          withServices: [_serviceUuid],
         );
 
         if (mounted) {
@@ -184,7 +184,8 @@ class _BluetoothConnectSheetState extends State<BluetoothConnectSheet> {
         if (mounted) {
           setState(() {
             _isConnecting = false;
-            _statusMessage = 'No se encontró el servicio o característica correcta';
+            _statusMessage =
+                'No se encontró el servicio o característica correcta';
           });
         }
       }
