@@ -18,7 +18,7 @@ class FileUtils {
     }
 
     // Crear nombre YYYY-MM-DD
-    final dateStr = DateFormat('yyyy-MM-dd_HH-mm-ss').format(date);
+    final dateStr = DateFormat('yyyy-MM-dd').format(date);
     final extension = imageFile.path.split('.').last;
     final newPath = '$folderPath/$dateStr.$extension';
 
