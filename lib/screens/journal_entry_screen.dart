@@ -634,10 +634,10 @@ class _JournalEntryScreenState extends State<JournalEntryScreen> {
                         ),
                         const SizedBox(height: 15),
 
-                        // Main description
-                        if (widget.aiAnalysis!['description'] != null)
+                        // Main message
+                        if (widget.aiAnalysis!['message'] != null)
                           Text(
-                            widget.aiAnalysis!['description'],
+                            widget.aiAnalysis!['message'],
                             style: (currentFont.style ?? const TextStyle())
                                 .copyWith(
                                   fontSize: 15,
