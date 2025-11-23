@@ -7,6 +7,7 @@ import 'package:mrzorro_app/screens/login_screen.dart';
 import 'package:mrzorro_app/services/api_service.dart';
 import 'package:mrzorro_app/services/auth_service.dart';
 import 'package:mrzorro_app/services/theme_service.dart';
+import 'package:mrzorro_app/widgets/bluetooth_connect_sheet.dart';
 import '../utils/colors.dart';
 import '../utils/constants.dart';
 
@@ -452,7 +453,24 @@ class _JournalScreenState extends State<JournalScreen> {
                   heroTag: 'fox_fab',
                   shape: const CircleBorder(),
                   backgroundColor: currentTheme.primaryColor,
-                  onPressed: () {},
+                  onPressed: () {
+                    if (_currentUserId != null) {
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder:
+                            (context) =>
+                                BluetoothConnectSheet(userId: _currentUserId!),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Error: Usuario no identificado'),
+                        ),
+                      );
+                    }
+                  },
                   child: Text(
                     '🦊',
                     style: TextStyle(
