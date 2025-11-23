@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import '../services/theme_service.dart';
@@ -102,6 +103,8 @@ class _JournalEntryScreenState extends State<JournalEntryScreen> {
 
       if (image != null) {
         final originalFile = File(image.path);
+        print('Original file path: ${originalFile.path}');
+        print('Original file size: ${await originalFile.length()} bytes');
 
         DateTime imageDate = DateTime.now();
         if (widget.entry != null && widget.entry!['date'] != null) {
@@ -198,11 +201,18 @@ class _JournalEntryScreenState extends State<JournalEntryScreen> {
         );
         // Convert to base64 for API
         final bytes = await savedImage.readAsBytes();
-        imageBase64 = base64Encode(bytes);
+        if (bytes.isNotEmpty) {
+          imageBase64 = base64Encode(bytes);
+        } else {
+          print('Warning: Image file is empty');
+        }
       }
 
       final result = await ApiService.addDiaryEntry(
         userId: _currentUserId!,
+        date: widget.entry != null && widget.entry!['date'] != null
+            ? widget.entry!['date']
+            : DateFormat('yyyy-MM-dd').format(DateTime.now()),
         mood: _selectedMood!,
         title:
             _titleController.text.trim().isNotEmpty

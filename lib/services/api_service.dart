@@ -6,6 +6,7 @@ class ApiService {
   /// Add a diary entry
   static Future<Map<String, dynamic>> addDiaryEntry({
     required String userId,
+    required String date,
     required String mood,
     String? title,
     String? note,
@@ -17,6 +18,7 @@ class ApiService {
         headers: ApiConfig.headers,
         body: jsonEncode({
           'user': userId,
+          'date': date,
           'mood': mood,
           'title': title,
           'note': note,

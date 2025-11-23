@@ -22,8 +22,16 @@ class FileUtils {
     final extension = imageFile.path.split('.').last;
     final newPath = '$folderPath/$dateStr.$extension';
 
+    // Prevent self-overwrite which causes 0-byte files
+    if (imageFile.path == newPath) {
+      return imageFile;
+    }
+
     // Copiar archivo a memoria interna
-    return imageFile.copy(newPath);
+    final savedFile = await imageFile.copy(newPath);
+    print('Saved file path: ${savedFile.path}');
+    print('Saved file size: ${await savedFile.length()} bytes');
+    return savedFile;
   }
 
   /// Get image file from date (for loading existing journal entries)
