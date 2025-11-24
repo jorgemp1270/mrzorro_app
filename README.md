@@ -97,7 +97,7 @@ Este proyecto es parte de un ecosistema más grande. Revisa los otros repositori
 ### Backend Integration
 ```python
 - Framework: FastAPI (Python)
-- Base de Datos: TinyDB (JSON-based)
+- Base de Datos: MongoDB (JSON-based)
 - IA: Google Gemini 2.5 Flash
 - Análisis Visual: PyTorch + ResNet-50
 - Validación: Pydantic
