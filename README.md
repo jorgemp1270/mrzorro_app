@@ -5,7 +5,7 @@ Una aplicación avanzada de bienestar emocional desarrollada en Flutter que inte
 ----
 
 <p align="center">
-  <img src="assets/images/fox-hola.png" width="30%" />
+  <img src="assets/icon/icon.png" width="30%" />
 </p>
 
 ----
