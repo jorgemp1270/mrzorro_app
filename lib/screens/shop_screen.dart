@@ -132,7 +132,7 @@ class _ShopScreenState extends State<ShopScreen> {
               headerSliverBuilder: (context, innerBoxIsScrolled) {
                 return [
                   SliverAppBar(
-                    expandedHeight: 340.0,
+                    expandedHeight: 370.0,
                     floating: false,
                     pinned: true,
                     backgroundColor: currentTheme.backgroundColor,

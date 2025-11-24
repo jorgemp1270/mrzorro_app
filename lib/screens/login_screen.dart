@@ -370,16 +370,16 @@ class _LoginTabState extends State<LoginTab> {
                   ),
                   const SizedBox(height: 20),
 
-                  TextButton(
-                    onPressed: () {},
-                    child: Text(
-                      '¿Olvidaste la contraseña?',
-                      style: (currentFont.style ?? const TextStyle()).copyWith(
-                        color: currentTheme.primaryColor,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ),
+                  // TextButton(
+                  //   onPressed: () {},
+                  //   child: Text(
+                  //     '¿Olvidaste la contraseña?',
+                  //     style: (currentFont.style ?? const TextStyle()).copyWith(
+                  //       color: currentTheme.primaryColor,
+                  //       fontSize: 14,
+                  //     ),
+                  //   ),
+                  // ),
 
                   // Debug button for API testing (remove in production)
                   TextButton(

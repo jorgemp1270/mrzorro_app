@@ -2,6 +2,28 @@
 
 Una aplicación avanzada de bienestar emocional desarrollada en Flutter que integra inteligencia artificial para proporcionar apoyo emocional personalizado, análisis de imágenes y seguimiento emocional inteligente.
 
+----
+
+<p align="center">
+  <img src="assets/images/fox-hola.png" width="30%" />
+</p>
+
+----
+
+## 📱 Screenshots
+
+<p align="center">
+  <img src=".resources/img/img-1.png" width="30%" />
+  <img src=".resources/img/img-2.png" width="30%" />
+  <img src=".resources/img/img-3.png" width="30%" />
+</p>
+
+<p align="center">
+  <img src=".resources/img/img-4.png" width="30%" />
+  <img src=".resources/img/img-5.png" width="30%" />
+  <img src=".resources/img/img-6.png" width="30%" />
+</p>
+
 ## ✨ Características Principales
 
 ### 🤖 Asistente de IA Emocional
