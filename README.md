@@ -663,42 +663,7 @@ print('Emotion average: ${_calculateCurrentMonthAverage()}');
 print('Image analysis: $_aiAnalysis');
 ```
 
-## 📈 Próximas Mejoras
-
-### Características Planeadas
-- 🌙 **Modo Oscuro** nativo
-- 📊 **Dashboard** de analytics emocionales
-- 🔔 **Notificaciones** de recordatorios
-- 📱 **Widget** de pantalla principal
-- 🌍 **Múltiples idiomas** (inglés, francés)
-- 🎨 **Temas personalizables** por usuario
-- 📈 **Gráficos avanzados** de tendencias emocionales
-
-### Optimizaciones Técnicas
-- ⚡ **State management** con Riverpod/Bloc
-- 🗄️ **Database local** con SQLite
-- 🔄 **Sincronización** offline-first
-- 🎯 **Testing** automatizado completo
-- 📦 **CI/CD** pipeline setup
-
----
-
-## 👥 Contribuciones
-
-### Como Contribuir
-1. Fork del repositorio
-2. Crear branch feature (`git checkout -b feature/nueva-caracteristica`)
-3. Commit cambios (`git commit -m 'Agregar nueva característica'`)
-4. Push al branch (`git push origin feature/nueva-caracteristica`)
-5. Crear Pull Request
-
-### Estándares de Código
-- **Lint**: Seguir `analysis_options.yaml`
-- **Formato**: Usar `flutter format .`
-- **Documentación**: Comentarios en funciones complejas
-- **Testing**: Agregar tests para nuevas funcionalidades
-
----
+----
 
 **Mr. Zorro - Tu compañero inteligente de bienestar emocional** 🦊✨
 
