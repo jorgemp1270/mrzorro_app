@@ -2,6 +2,10 @@
 
 Una aplicación avanzada de bienestar emocional desarrollada en Flutter que integra inteligencia artificial para proporcionar apoyo emocional personalizado, análisis de imágenes y seguimiento emocional inteligente.
 
+## 📄 Documentación del proyecto
+
+- **Documentación técnica**: [Mr. Zorro](.resources/docs/Documentacion_MrZorro.pdf)
+
 ## 🔗 Repositorios
 
 Este proyecto es parte de un ecosistema más grande. Revisa los otros repositorios de sus componentes:
