@@ -1,4 +1,4 @@
-# 🦊 Mr. Zorro - AI-Powered Emotional Wellness Journal
+# 🦊 Mr. Zorro
 
 Una aplicación avanzada de bienestar emocional desarrollada en Flutter que integra inteligencia artificial para proporcionar apoyo emocional personalizado, análisis de imágenes y seguimiento emocional inteligente.
 
