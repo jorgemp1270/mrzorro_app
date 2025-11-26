@@ -13,11 +13,27 @@ class ApiTestScreen extends StatefulWidget {
 class _ApiTestScreenState extends State<ApiTestScreen> {
   String _testResult = 'Tap to test API connection';
   bool _isLoading = false;
+  late TextEditingController _urlController;
+
+  @override
+  void initState() {
+    super.initState();
+    _urlController = TextEditingController(text: ApiConfig.baseUrl);
+  }
+
+  @override
+  void dispose() {
+    _urlController.dispose();
+    super.dispose();
+  }
 
   Future<void> _testApiConnection() async {
+    // Update the base URL before testing
+    ApiConfig.baseUrl = _urlController.text.trim();
+    
     setState(() {
       _isLoading = true;
-      _testResult = 'Testing connection...';
+      _testResult = 'Testing connection to ${ApiConfig.baseUrl}...';
     });
 
     try {
@@ -89,12 +105,30 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
                   ),
                 ),
                 const SizedBox(height: 10),
-                Text(
-                  'Base URL: ${ApiConfig.baseUrl}',
+                TextField(
+                  controller: _urlController,
                   style: (currentFont.style ?? const TextStyle()).copyWith(
                     color: currentTheme.textColor,
                   ),
+                  decoration: InputDecoration(
+                    labelText: 'Base URL',
+                    labelStyle: TextStyle(color: currentTheme.textColor),
+                    border: const OutlineInputBorder(),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                        color: currentTheme.textColor.withOpacity(0.5),
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: currentTheme.primaryColor),
+                    ),
+                  ),
+                  onChanged: (value) {
+                    ApiConfig.baseUrl = value;
+                    setState(() {}); // Rebuild to update the URLs below
+                  },
                 ),
+                const SizedBox(height: 10),
                 Text(
                   'Login URL: ${ApiConfig.loginUrl}',
                   style: (currentFont.style ?? const TextStyle()).copyWith(
