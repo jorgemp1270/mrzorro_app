@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../services/theme_service.dart';
+import '../config/api_config.dart';
 
 class BluetoothConnectSheet extends StatefulWidget {
   final String userId;
@@ -115,8 +116,97 @@ class _BluetoothConnectSheetState extends State<BluetoothConnectSheet> {
     }
   }
 
+  Future<Map<String, String>?> _showWifiCredentialsDialog() async {
+    final ssidController = TextEditingController();
+    final passwordController = TextEditingController();
+    final themeService = ThemeService();
+    final currentTheme = themeService.currentTheme;
+
+    return showDialog<Map<String, String>>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: currentTheme.cardColor,
+          title: Text(
+            'Configurar WiFi',
+            style: TextStyle(color: currentTheme.textColor),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Ingresa las credenciales de tu red WiFi para que Mr. Zorro se pueda conectar.',
+                style: TextStyle(color: currentTheme.textColor),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: ssidController,
+                style: TextStyle(color: currentTheme.textColor),
+                decoration: InputDecoration(
+                  labelText: 'Nombre de la red (SSID)',
+                  labelStyle: TextStyle(
+                    color: currentTheme.textColor.withOpacity(0.7),
+                  ),
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(
+                      color: currentTheme.textColor.withOpacity(0.3),
+                    ),
+                  ),
+                ),
+              ),
+              TextField(
+                controller: passwordController,
+                style: TextStyle(color: currentTheme.textColor),
+                decoration: InputDecoration(
+                  labelText: 'Contraseña',
+                  labelStyle: TextStyle(
+                    color: currentTheme.textColor.withOpacity(0.7),
+                  ),
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(
+                      color: currentTheme.textColor.withOpacity(0.3),
+                    ),
+                  ),
+                ),
+                obscureText: true,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                'Cancelar',
+                style: TextStyle(color: currentTheme.textColor),
+              ),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: currentTheme.primaryColor,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () {
+                if (ssidController.text.isNotEmpty) {
+                  Navigator.pop(context, {
+                    'ssid': ssidController.text,
+                    'wifi_password': passwordController.text,
+                  });
+                }
+              },
+              child: const Text('Conectar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Future<void> _connectToDevice(BluetoothDevice device) async {
     await _stopScan();
+
+    // Ask for WiFi credentials first
+    final credentials = await _showWifiCredentialsDialog();
+    if (credentials == null) return;
 
     setState(() {
       _isConnecting = true;
@@ -132,7 +222,7 @@ class _BluetoothConnectSheetState extends State<BluetoothConnectSheet> {
         });
       }
 
-      await _sendUserId(device);
+      await _sendCredentials(device, credentials);
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -143,7 +233,10 @@ class _BluetoothConnectSheetState extends State<BluetoothConnectSheet> {
     }
   }
 
-  Future<void> _sendUserId(BluetoothDevice device) async {
+  Future<void> _sendCredentials(
+    BluetoothDevice device,
+    Map<String, String> wifiCreds,
+  ) async {
     try {
       List<BluetoothService> services = await device.discoverServices();
       BluetoothCharacteristic? writeCharacteristic;
@@ -162,7 +255,20 @@ class _BluetoothConnectSheetState extends State<BluetoothConnectSheet> {
       }
 
       if (writeCharacteristic != null) {
-        await writeCharacteristic.write(utf8.encode(widget.userId));
+        // Strip http://, https:// and :8000 from the base URL
+        final apiHost = ApiConfig.baseUrl
+            .replaceAll('http://', '')
+            .replaceAll('https://', '')
+            .replaceAll(':8000', '');
+
+        final data = {
+          'userid': widget.userId,
+          'ssid': wifiCreds['ssid'],
+          'wifi_password': wifiCreds['wifi_password'],
+          'api_host': apiHost,
+        };
+
+        await writeCharacteristic.write(utf8.encode(jsonEncode(data)));
         if (mounted) {
           setState(() {
             _isConnecting = false;
