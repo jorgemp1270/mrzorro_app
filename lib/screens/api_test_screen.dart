@@ -30,7 +30,7 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
   Future<void> _testApiConnection() async {
     // Update the base URL before testing
     ApiConfig.baseUrl = _urlController.text.trim();
-    
+
     setState(() {
       _isLoading = true;
       _testResult = 'Testing connection to ${ApiConfig.baseUrl}...';

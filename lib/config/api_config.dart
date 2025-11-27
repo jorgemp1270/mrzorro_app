@@ -3,7 +3,7 @@ class ApiConfig {
   // Use 127.0.0.1 for iOS simulator
   // static const String baseUrl = 'http://10.0.2.2:8000';
   // static const String baseUrl = 'http://192.168.1.203:8000';
-  static String baseUrl = 'https://53bmngxg-8000.usw3.devtunnels.ms';
+  static String baseUrl = 'http://172.20.31.19:8000';
 
   // API Endpoints
   static const String loginEndpoint = '/login';

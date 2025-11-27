@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
 import 'package:intl/intl.dart';
 import 'package:mrzorro_app/screens/login_screen.dart';
 import 'package:mrzorro_app/screens/shop_screen.dart';
@@ -88,6 +89,7 @@ class _HomeTabState extends State<HomeTab> {
   String _currentPhrase = '';
   String _currentFoxPhrase = '';
   final List<Map<String, String>> _messages = [];
+  bool _crisisAlert = false;
   bool _isLoading = false;
   String _points = '';
   String? _currentUserId;
@@ -193,6 +195,20 @@ class _HomeTabState extends State<HomeTab> {
               responseData['message'] ??
               'Lo siento, no pude generar una respuesta.';
           _messages.add({'role': 'assistant', 'content': aiResponse});
+          final crisis_alert = responseData['crisis_alert'] ?? false;
+          if (crisis_alert) {
+            _crisisAlert = true;
+            // Show crisis alert dialog
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Alerta de crisis detectada: Por favor, contacta a la línea de la vida.',
+                ),
+                backgroundColor: Colors.red,
+                duration: const Duration(seconds: 30),
+              ),
+            );
+          }
           // Keep only recent messages to prevent UI performance issues
           if (_messages.length > maxMessages) {
             _messages.removeRange(0, _messages.length - maxMessages);
@@ -564,6 +580,63 @@ class _HomeTabState extends State<HomeTab> {
                                   ),
                                 ),
                               )),
+
+                        const SizedBox(height: 15),
+
+                        if (_crisisAlert) ...[
+                          Container(
+                            padding: const EdgeInsets.all(30),
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              borderRadius: BorderRadius.circular(100),
+                              border: Border.all(color: Colors.red),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.max,
+                              children: [
+                                const SizedBox(width: 15),
+                                Expanded(
+                                  child: Text(
+                                    'Por favor, contacta a la línea de la vida: 800 911 2000',
+                                    style: (currentFont.style ??
+                                            const TextStyle())
+                                        .copyWith(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                  ),
+                                ),
+                                const SizedBox(width: 15),
+                                GestureDetector(
+                                  onTap: () async {
+                                    setState(() {
+                                      _crisisAlert = false;
+                                    });
+                                    const number =
+                                        '8009112000'; //set the number here
+                                    await FlutterPhoneDirectCaller.callNumber(
+                                      number,
+                                    );
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      Icons.phone,
+                                      color: Colors.red,
+                                      size: 20,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
 
                         const SizedBox(height: 15),
 
