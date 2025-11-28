@@ -4,6 +4,7 @@ import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
 import 'package:intl/intl.dart';
 import 'package:mrzorro_app/screens/login_screen.dart';
 import 'package:mrzorro_app/screens/shop_screen.dart';
+import 'package:mrzorro_app/screens/customize_fox_screen.dart';
 import '../utils/colors.dart';
 import '../utils/constants.dart';
 import '../services/api_service.dart';
@@ -528,6 +529,44 @@ class _HomeTabState extends State<HomeTab> {
                                 fontWeight: FontWeight.w500,
                               ),
                         ),
+                        const SizedBox(height: 10),
+                        if (_currentUserId != null)
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (context) => CustomizeFoxScreen(
+                                        userId: _currentUserId!,
+                                      ),
+                                ),
+                              );
+                            },
+                            icon: const Text(
+                              '🦊',
+                              style: TextStyle(fontSize: 18),
+                            ),
+                            label: Text(
+                              'Personalizar',
+                              style: (currentFont.style ?? const TextStyle())
+                                  .copyWith(
+                                    color: currentTheme.textColor,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 12,
+                                  ),
+                            ),
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 5,
+                              ),
+                              backgroundColor: currentTheme.primaryColor,
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                          ),
+
                         const SizedBox(height: 15),
 
                         // Messages

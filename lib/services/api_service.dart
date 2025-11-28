@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../config/api_config.dart';
+import '../models/user_settings.dart';
 
 class ApiService {
   /// Add a diary entry
@@ -213,5 +214,80 @@ class ApiService {
     } catch (e) {
       return {'success': false, 'message': 'Error de conexión: $e'};
     }
+  }
+
+  /// Update user settings
+  static Future<Map<String, dynamic>> updateSettings(
+    UpdateSettingsRequest request,
+  ) async {
+    try {
+      final response = await http.post(
+        Uri.parse(ApiConfig.settingsUrl),
+        headers: ApiConfig.headers,
+        body: jsonEncode(request.toJson()),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {
+          'success': true,
+          'message': data['message'] ?? 'Configuración actualizada',
+        };
+      } else {
+        final errorData = jsonDecode(response.body);
+        return {
+          'success': false,
+          'message': errorData['detail'] ?? 'Error al actualizar configuración',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Error de conexión: $e'};
+    }
+  }
+
+  /// Get user settings
+  static Future<Map<String, dynamic>> getSettings(String userId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConfig.settingsUrl}/$userId'),
+        headers: ApiConfig.headers,
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {'success': true, 'settings': data};
+      } else {
+        final errorData = jsonDecode(response.body);
+        return {
+          'success': false,
+          'message': errorData['detail'] ?? 'Error al obtener configuración',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Error de conexión: $e'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> deleteContext(String userId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('${ApiConfig.deleteContextUrl}/$userId'),
+        headers: ApiConfig.headers,
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {'success': true, 'message': data['message']};
+      } else {
+        final errorData = jsonDecode(response.body);
+        return {
+          'success': false,
+          'message': errorData['detail'] ?? 'Error al eliminar contexto',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Error de conexión: $e'};
+    }
+
   }
 }

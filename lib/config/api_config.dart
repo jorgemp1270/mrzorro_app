@@ -13,6 +13,8 @@ class ApiConfig {
   static const String promptEndpoint = '/prompt';
   static const String makePurchaseEndpoint = '/make-purchase';
   static const String purchasesEndpoint = '/purchases';
+  static const String settingsEndpoint = '/settings';
+  static const String deleteContextEndpoint = '/context';
 
   // Complete URLs
   static String get loginUrl => '$baseUrl$loginEndpoint';
@@ -22,6 +24,8 @@ class ApiConfig {
   static String get promptUrl => '$baseUrl$promptEndpoint';
   static String get makePurchaseUrl => '$baseUrl$makePurchaseEndpoint';
   static String get purchasesUrl => '$baseUrl$purchasesEndpoint';
+  static String get settingsUrl => '$baseUrl$settingsEndpoint';
+  static String get deleteContextUrl => '$baseUrl$deleteContextEndpoint';
 
   // Headers
   static const Map<String, String> headers = {
