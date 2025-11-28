@@ -2,6 +2,21 @@
 
 Una aplicación avanzada de bienestar emocional desarrollada en Flutter que integra inteligencia artificial para proporcionar apoyo emocional personalizado, análisis de imágenes y seguimiento emocional inteligente.
 
+## 🪁 Lo nuevo
+
+Mr. Zorro ahora es más inteligente, cuida de ti como tu gran compañero.
+
+<p align="center">
+  <img src=".resources/img/img-7.png" width="30%" />
+  <img src=".resources/img/img-8.png" width="30%" />
+  <img src=".resources/img/img-9.png" width="30%" />
+</p>
+
+<p align="center">
+  <img src=".resources/img/img-10.png" width="30%" />
+  <img src=".resources/img/img-11.png" width="30%" />
+</p>
+
 ## 📄 Documentación del proyecto
 
 - **Documentación técnica**: [Mr. Zorro](.resources/docs/Documentacion_MrZorro.pdf)
