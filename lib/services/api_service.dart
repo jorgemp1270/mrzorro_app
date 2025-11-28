@@ -288,6 +288,137 @@ class ApiService {
     } catch (e) {
       return {'success': false, 'message': 'Error de conexión: $e'};
     }
+  }
 
+  /// Add a new contact
+  static Future<Map<String, dynamic>> addContact({
+    required String userId,
+    required String name,
+    required String phone,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse(ApiConfig.contactsUrl),
+        headers: ApiConfig.headers,
+        body: jsonEncode({'user_id': userId, 'name': name, 'phone': phone}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {'success': true, 'message': data['message']};
+      } else {
+        final errorData = jsonDecode(response.body);
+        return {
+          'success': false,
+          'message': errorData['detail'] ?? 'Error al agregar contacto',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Error de conexión: $e'};
+    }
+  }
+
+  /// Get contacts for a user
+  static Future<Map<String, dynamic>> getContacts(String userId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConfig.contactsUrl}/$userId'),
+        headers: ApiConfig.headers,
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {'success': true, 'contacts': data};
+      } else {
+        final errorData = jsonDecode(response.body);
+        return {
+          'success': false,
+          'message': errorData['detail'] ?? 'Error al obtener contactos',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Error de conexión: $e'};
+    }
+  }
+
+  /// Delete a contact
+  static Future<Map<String, dynamic>> deleteContact({
+    required String userId,
+    required String name,
+    required String phone,
+  }) async {
+    try {
+      final response = await http.delete(
+        Uri.parse(ApiConfig.contactsUrl),
+        headers: ApiConfig.headers,
+        body: jsonEncode({'user_id': userId, 'name': name, 'phone': phone}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {'success': true, 'message': data['message']};
+      } else {
+        final errorData = jsonDecode(response.body);
+        return {
+          'success': false,
+          'message': errorData['detail'] ?? 'Error al eliminar contacto',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Error de conexión: $e'};
+    }
+  }
+
+  /// Get user danger level
+  static Future<Map<String, dynamic>> getUserDangerLevel(String userId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConfig.dangerLevelUrl}/$userId'),
+        headers: ApiConfig.headers,
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {'success': true, 'danger_level': data['danger_level']};
+      } else {
+        final errorData = jsonDecode(response.body);
+        return {
+          'success': false,
+          'message': errorData['detail'] ?? 'Error al obtener nivel de peligro',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Error de conexión: $e'};
+    }
+  }
+
+  /// Reset user danger level
+  static Future<Map<String, dynamic>> resetUserDangerLevel(
+    String userId,
+  ) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${ApiConfig.baseUrl}/reset-danger-level/$userId'),
+        headers: ApiConfig.headers,
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {
+          'success': true,
+          'message': data['message'],
+          'danger_level': data['danger_level'],
+        };
+      } else {
+        final errorData = jsonDecode(response.body);
+        return {
+          'success': false,
+          'message':
+              errorData['detail'] ?? 'Error al resetear nivel de peligro',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Error de conexión: $e'};
+    }
   }
 }

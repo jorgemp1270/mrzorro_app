@@ -588,6 +588,7 @@ class _CustomizeFoxScreenState extends State<CustomizeFoxScreen> {
                                           .copyWith(
                                             fontSize: 16,
                                             fontWeight: FontWeight.bold,
+                                            color: currentTheme.textColor,
                                           ),
                                     ),
                           ),

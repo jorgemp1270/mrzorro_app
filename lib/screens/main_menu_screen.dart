@@ -1,10 +1,13 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
 import 'package:mrzorro_app/screens/login_screen.dart';
 import 'package:mrzorro_app/screens/shop_screen.dart';
 import 'package:mrzorro_app/screens/customize_fox_screen.dart';
+import 'package:mrzorro_app/screens/contacts_screen.dart';
 import '../utils/colors.dart';
 import '../utils/constants.dart';
 import '../services/api_service.dart';
@@ -91,9 +94,11 @@ class _HomeTabState extends State<HomeTab> {
   String _currentFoxPhrase = '';
   final List<Map<String, String>> _messages = [];
   bool _crisisAlert = false;
+  bool _medicalAlert = false;
   bool _isLoading = false;
   String _points = '';
   String? _currentUserId;
+  int _dangerLvl = 0;
   static const int maxMessages =
       10; // Limit messages to prevent performance issues
 
@@ -107,10 +112,74 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   Future<void> _getCurrentUser() async {
-    final userId = await AuthService.getCurrentUserId();
-    setState(() {
-      _currentUserId = userId;
-    });
+    final userInfo = await AuthService.getCurrentUserInfo();
+    if (userInfo != null) {
+      final userId = userInfo['user'] ?? '';
+      setState(() {
+        _currentUserId = userId;
+      });
+
+      // Fetch danger level from API
+      if (userId != null) {
+        try {
+          final result = await ApiService.getUserDangerLevel(userId);
+          if (result['success'] == true) {
+            setState(() {
+              _dangerLvl = result['danger_level'] ?? 0;
+            });
+
+            if (_dangerLvl >= 3) {
+              _sendCrisisSMS();
+            }
+          }
+        } catch (e) {
+          print('Error fetching danger level: $e');
+        }
+      }
+    }
+  }
+
+  Future<void> _sendCrisisSMS() async {
+    try {
+      // 1. Get Location
+      final position = await _determinePosition();
+      final lat = position.latitude;
+      final lng = position.longitude;
+      final mapLink =
+          "https://www.google.com/maps/search/?api=1&query=$lat,$lng";
+
+      // 2. Get Contacts
+      if (_currentUserId == null) return;
+      final result = await ApiService.getContacts(_currentUserId!);
+
+      if (result['success'] == true) {
+        final contacts = result['contacts'] as List;
+        if (contacts.isEmpty) return;
+
+        // 3. Prepare Message
+        final message =
+            "Tu amigo necesita ayuda, se encuentra en una situación de crisis emocional y su vida corre peligro, su localización es: $mapLink";
+
+        // 4. Send SMS (using url_launcher)
+        // Construct phone numbers string (comma separated for some devices, or just first one)
+        // Android often supports comma separated numbers in 'sms:' scheme
+        final phones = contacts.map((c) => c['phone']).join(',');
+
+        final Uri smsUri = Uri(
+          scheme: 'sms',
+          path: phones,
+          queryParameters: <String, String>{'body': message},
+        );
+
+        if (await canLaunchUrl(smsUri)) {
+          await launchUrl(smsUri);
+        } else {
+          print('Could not launch SMS url');
+        }
+      }
+    } catch (e) {
+      print("Error sending crisis SMS: $e");
+    }
   }
 
   @override
@@ -207,6 +276,20 @@ class _HomeTabState extends State<HomeTab> {
                 ),
                 backgroundColor: Colors.red,
                 duration: const Duration(seconds: 30),
+              ),
+            );
+          }
+
+          final medical_alert = responseData['medical_alert'] ?? false;
+          if (medical_alert) {
+            _medicalAlert = true;
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Alerta médica detectada: Buscando hospitales cercanos...',
+                ),
+                backgroundColor: Colors.orange,
+                duration: Duration(seconds: 5),
               ),
             );
           }
@@ -396,6 +479,65 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
+  Future<Position> _determinePosition() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      return Future.error('Los servicios de ubicación están desactivados.');
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return Future.error('Los permisos de ubicación fueron denegados');
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      return Future.error(
+        'Los permisos de ubicación están denegados permanentemente.',
+      );
+    }
+
+    return await Geolocator.getCurrentPosition();
+  }
+
+  Future<void> _launchMapsUrl() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final position = await _determinePosition();
+      final lat = position.latitude;
+      final lng = position.longitude;
+
+      // Create the Google Maps URL for searching hospitals nearby
+      final Uri url = Uri.parse(
+        'https://www.google.com/maps/search/hospitales/@$lat,$lng,15z',
+      );
+
+      if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+        throw Exception('No se pudo abrir el mapa');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final dateFormat = DateFormat('EEEE, d \'de\' MMMM', 'es');
@@ -499,6 +641,87 @@ class _HomeTabState extends State<HomeTab> {
                         ],
                       ),
                     ],
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  GestureDetector(
+                    onTap: () async {
+                      if (_currentUserId != null) {
+                        if (_dangerLvl >= 3) {
+                          await ApiService.resetUserDangerLevel(
+                            _currentUserId!,
+                          );
+                          if (mounted) {
+                            setState(() {
+                              _dangerLvl = 0;
+                            });
+                          }
+                        }
+
+                        if (mounted) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder:
+                                  (context) =>
+                                      ContactsScreen(userId: _currentUserId!),
+                            ),
+                          );
+                        }
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Espera a que cargue tu usuario'),
+                          ),
+                        );
+                      }
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(15),
+                      margin: const EdgeInsets.symmetric(horizontal: 0),
+                      decoration: BoxDecoration(
+                        color: _dangerLvl >= 3 ? Colors.orange : Colors.green,
+                        borderRadius: BorderRadius.circular(15),
+                        boxShadow: [
+                          BoxShadow(
+                            color: currentTheme.primaryColor.withValues(
+                              alpha: 0.3,
+                            ),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        mainAxisSize: MainAxisSize.max,
+                        spacing: 14,
+                        children: [
+                          Icon(
+                            _dangerLvl >= 3
+                                ? Icons.health_and_safety
+                                : Icons.contact_page_outlined,
+                            color: Colors.white,
+                            size: 40,
+                          ),
+                          Expanded(
+                            child: Text(
+                              _dangerLvl >= 3
+                                  ? 'La ayuda está en camino, ya me he contactado con tus personas de confianza.'
+                                  : 'Agrega aquí a tus contactos de confianza, permíteme ayudarte en momentos difíciles.',
+                              style: (currentFont.style ?? const TextStyle())
+                                  .copyWith(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.white,
+                                  ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
 
                   const SizedBox(height: 25),
@@ -671,6 +894,80 @@ class _HomeTabState extends State<HomeTab> {
                                       size: 20,
                                     ),
                                   ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+
+                        if (_medicalAlert) ...[
+                          const SizedBox(height: 15),
+                          Container(
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: Colors.orange),
+                            ),
+                            child: Column(
+                              children: [
+                                Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.medical_services,
+                                      color: Colors.orange,
+                                      size: 30,
+                                    ),
+                                    const SizedBox(width: 15),
+                                    Expanded(
+                                      child: Text(
+                                        'Se ha detectado una alerta médica. ¿Deseas buscar hospitales cercanos?',
+                                        style: (currentFont.style ??
+                                                const TextStyle())
+                                            .copyWith(
+                                              color: currentTheme.textColor,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 15),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: ElevatedButton.icon(
+                                        onPressed: _launchMapsUrl,
+                                        icon: const Icon(Icons.map),
+                                        label: const Text('Abrir Mapa'),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.orange,
+                                          foregroundColor: Colors.white,
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 12,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              10,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    IconButton(
+                                      onPressed: () {
+                                        setState(() {
+                                          _medicalAlert = false;
+                                        });
+                                      },
+                                      icon: const Icon(Icons.close),
+                                      style: IconButton.styleFrom(
+                                        backgroundColor: Colors.grey[200],
+                                        foregroundColor: Colors.black,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),

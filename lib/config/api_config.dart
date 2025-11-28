@@ -15,6 +15,8 @@ class ApiConfig {
   static const String purchasesEndpoint = '/purchases';
   static const String settingsEndpoint = '/settings';
   static const String deleteContextEndpoint = '/context';
+  static const String contactsEndpoint = '/contacts';
+  static const String dangerLevelEndpoint = '/danger-level';
 
   // Complete URLs
   static String get loginUrl => '$baseUrl$loginEndpoint';
@@ -26,6 +28,8 @@ class ApiConfig {
   static String get purchasesUrl => '$baseUrl$purchasesEndpoint';
   static String get settingsUrl => '$baseUrl$settingsEndpoint';
   static String get deleteContextUrl => '$baseUrl$deleteContextEndpoint';
+  static String get contactsUrl => '$baseUrl$contactsEndpoint';
+  static String get dangerLevelUrl => '$baseUrl$dangerLevelEndpoint';
 
   // Headers
   static const Map<String, String> headers = {
