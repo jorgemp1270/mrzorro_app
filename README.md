@@ -44,6 +44,18 @@ Este proyecto es parte de un ecosistema más grande. Revisa los otros repositori
 - **Límite inteligente** de mensajes para mantener conversaciones focused (10 mensajes máx)
 - **Soporte multiidioma** con respuestas naturales en español
 
+### 🦊 Personalización de Mr. Zorro
+- **Configuración de perfil** con edad objetivo (Niños, Adolescentes, Adultos)
+- **Personalidad adaptable** con 9 opciones (Amigable, Profesional, Divertido, Sabio, etc.)
+- **Contexto personalizado** mediante "Consideraciones especiales" y "Sobre mí"
+- **Gestión de memoria** con opción para borrar el historial de conversación
+
+### 📡 Conectividad IoT (ESP32)
+- **Configuración Bluetooth** integrada en la app
+- **Provisionamiento WiFi** seguro para el dispositivo físico
+- **Sincronización automática** de credenciales y host API
+- **Interacción física** complementaria a la app móvil
+
 ### 🔐 Sistema de Autenticación Avanzado
 - **Registro seguro** con validación en tiempo real
 - **Login automático** con credenciales cifradas
@@ -110,12 +122,15 @@ Este proyecto es parte de un ecosistema más grande. Revisa los otros repositori
 
 ### Endpoints Implementados
 ```http
-POST /login         # Autenticación de usuario
-POST /signup        # Registro de nuevos usuarios
-POST /diary         # Crear/editar entradas de diario
-GET  /diary/{user}  # Obtener todas las entradas
-POST /prompt        # Chat con IA (Gemini)
-POST /predict-image # Análisis de imágenes con IA
+POST   /login           # Autenticación de usuario
+POST   /signup          # Registro de nuevos usuarios
+POST   /diary           # Crear/editar entradas de diario
+GET    /diary/{user}    # Obtener todas las entradas
+POST   /prompt          # Chat con IA (Gemini)
+POST   /predict-image   # Análisis de imágenes con IA
+GET    /settings/{user} # Obtener configuración de usuario
+POST   /settings        # Actualizar configuración de usuario
+DELETE /context/{user}  # Borrar memoria/contexto de conversación
 ```
 
 ## 🚀 Instalación y Configuración Completa
