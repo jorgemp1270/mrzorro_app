@@ -94,6 +94,13 @@ Este proyecto es parte de un ecosistema más grande. Revisa los otros repositori
 - **Responsive design** adaptado a diferentes pantallas
 - **Dark/Light theme support** automático del sistema
 
+### 🚨 Sistema de Alerta de Crisis
+- **Detección de Nivel de Peligro**: Monitoreo constante del estado de riesgo del usuario.
+- **Contactos de Confianza**: Gestión de lista de contactos para emergencias.
+- **Alerta SMS Automática**: Envío de mensajes de ayuda con ubicación GPS en tiempo real.
+- **Protocolo de Seguridad**: Activación automática de alertas (Nivel >= 3) y reseteo manual tras confirmación.
+- **Integración con Mapas**: Enlace directo a Google Maps con coordenadas precisas.
+
 ## 🏗️ Arquitectura Técnica
 
 ### Frontend (Flutter)
@@ -105,6 +112,8 @@ Este proyecto es parte de un ecosistema más grande. Revisa los otros repositori
 - HTTP: http package con manejo de errores
 - Images: image_picker + path_provider
 - Auth: local_auth (biométrica)
+- Location: geolocator (GPS)
+- Launcher: url_launcher + flutter_phone_direct_caller
 - Navegación: Material PageRoute
 - Fonts: Google Fonts (Poppins)
 - Internacionalización: intl package
@@ -131,6 +140,11 @@ POST   /predict-image   # Análisis de imágenes con IA
 GET    /settings/{user} # Obtener configuración de usuario
 POST   /settings        # Actualizar configuración de usuario
 DELETE /context/{user}  # Borrar memoria/contexto de conversación
+GET    /contacts/{user} # Obtener contactos de confianza
+POST   /contacts        # Agregar contacto de confianza
+DELETE /contacts/{id}   # Eliminar contacto de confianza
+GET    /danger-level/{user} # Obtener nivel de peligro del usuario
+POST   /reset-danger-level/{user} # Resetear nivel de peligro a 0
 ```
 
 ## 🚀 Instalación y Configuración Completa

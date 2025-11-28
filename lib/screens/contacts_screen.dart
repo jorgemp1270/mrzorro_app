@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../services/theme_service.dart';
-import '../utils/colors.dart';
 
 class ContactsScreen extends StatefulWidget {
   final String userId;
